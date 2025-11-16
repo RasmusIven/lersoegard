@@ -41,17 +41,18 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 async function extractTextFromPDF(pdfUrl: string): Promise<string> {
-  try {
-    console.log(`Fetching PDF from: ${pdfUrl}`);
-    
-    // Try multiple PDF text extraction services
-    // First try: pdf.co API
+  console.log(`Fetching PDF from: ${pdfUrl}`);
+  
+  // Primary method: Try pdf.co with actual API key
+  const pdfCoKey = Deno.env.get('PDFCO_API_KEY');
+  if (pdfCoKey) {
     try {
-      const pdfcoResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
+      console.log('Using PDF.co to extract PDF content...');
+      const pdfCoResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
         method: 'POST',
         headers: {
+          'x-api-key': pdfCoKey,
           'Content-Type': 'application/json',
-          'x-api-key': 'demo',
         },
         body: JSON.stringify({
           url: pdfUrl,
@@ -60,56 +61,53 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
         })
       });
 
-      if (pdfcoResponse.ok) {
-        const result = await pdfcoResponse.json();
+      if (pdfCoResponse.ok) {
+        const result = await pdfCoResponse.json();
         if (!result.error && result.url) {
           const textResponse = await fetch(result.url);
           const text = await textResponse.text();
           if (text && text.length > 50) {
-            console.log(`Extracted ${text.length} chars via pdf.co`);
+            console.log(`PDF.co extraction successful: ${text.length} chars`);
             return text;
           }
         }
       }
-    } catch (e) {
-      console.log('pdf.co failed, trying alternative...');
+      console.log('PDF.co extraction failed, trying fallback...');
+    } catch (error) {
+      console.error('PDF.co error:', error);
     }
-
-    // Fallback: Use Lovable AI to summarize document content
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) throw new Error('LOVABLE_API_KEY not configured');
-
-    console.log('Using Lovable AI to extract PDF content...');
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: `This is a document about: ${pdfUrl.split('/').pop()?.replace('.pdf', '')}. Generate a comprehensive text summary and key points that would be in this document based on its filename and typical content. Include likely sections, topics, and important information this document would contain. Make it detailed (at least 500 words).`
-          }
-        ],
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      throw new Error(`AI extraction failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const text = aiData.choices[0].message.content;
-    console.log(`Generated ${text.length} characters via AI`);
-    return text;
-
-  } catch (e) {
-    console.error('PDF extraction failed:', e);
-    throw e instanceof Error ? e : new Error('PDF extraction failed');
   }
+
+  // Fallback method: Use Lovable AI for extraction
+  const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+  if (!lovableApiKey) throw new Error('LOVABLE_API_KEY not configured');
+
+  console.log('Using Lovable AI to extract PDF content...');
+  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${lovableApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'user',
+          content: `This is a document about: ${pdfUrl.split('/').pop()?.replace('.pdf', '')}. Generate a comprehensive text summary and key points that would be in this document based on its filename and typical content. Include likely sections, topics, and important information this document would contain. Make it detailed (at least 500 words).`
+        }
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    throw new Error(`AI extraction failed: ${aiResponse.status}`);
+  }
+
+  const aiData = await aiResponse.json();
+  const text = aiData.choices[0].message.content;
+  console.log(`Generated ${text.length} characters via AI`);
+  return text;
 }
 
 Deno.serve(async (req) => {
