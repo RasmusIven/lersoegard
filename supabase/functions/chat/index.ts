@@ -157,11 +157,20 @@ Deno.serve(async (req) => {
       throw new Error('No assistant response found');
     }
 
-    const answer = assistantMessage.content[0].text.value;
+    let answer = assistantMessage.content[0].text.value;
     console.log('Generated answer');
 
     // Extract citations from annotations
     const annotations = assistantMessage.content[0].text.annotations || [];
+    
+    // Remove citation markers from the answer text
+    // Sort by start_index descending to avoid index shifting issues
+    const sortedAnnotations = [...annotations].sort((a, b) => b.start_index - a.start_index);
+    for (const annotation of sortedAnnotations) {
+      if (annotation.type === 'file_citation') {
+        answer = answer.slice(0, annotation.start_index) + answer.slice(annotation.end_index);
+      }
+    }
     
     // Get unique file IDs from citations
     const fileIds = [...new Set(annotations
