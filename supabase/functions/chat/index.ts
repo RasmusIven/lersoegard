@@ -156,27 +156,26 @@ Deno.serve(async (req) => {
       .map((c, i) => `[Document: ${c.documentName}]\n${c.chunkText}`)
       .join('\n\n---\n\n');
 
-    // Call OpenAI for answer generation
-    const openaiKey = Deno.env.get('OPENAI_API_KEY');
-    const completion = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Lovable AI for answer generation
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+    const completion = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiKey}`,
+        'Authorization': `Bearer ${lovableKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
-            content: 'Du er en hjælpsom assistent, der besvarer spørgsmål baseret på uddrag fra dokumenter. Svar altid på dansk. Angiv altid, hvilke dokumenter du brugte til at besvare spørgsmålet. Hvis dokumenterne ikke indeholder relevant information, skal du sige det klart.',
+            content: 'Du er en hjælpsom assistent, der besvarer spørgsmål baseret på uddrag fra dokumenter. Svar altid på dansk. Angiv altid, hvilke dokumenter du brugte til at besvare spørgsmålet. Hvis dokumenterne ikke indeholder relevant information, skal du sige det klart.'
           },
           {
             role: 'user',
-            content: `Based on these document excerpts:\n\n${context}\n\nQuestion: ${question}`,
-          },
+            content: `Based on these document excerpts:\n\n${context}\n\nQuestion: ${question}`
+          }
         ],
-        temperature: 0.3,
         max_tokens: 500,
       }),
     });
