@@ -45,10 +45,23 @@ const Index = () => {
   const [failedCount, setFailedCount] = useState(0);
   const [currentDocument, setCurrentDocument] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const hasAutoProcessed = useRef(false);
   const { toast } = useToast();
   useEffect(() => {
     fetchDocuments();
   }, []);
+
+  // Auto-process unprocessed documents on load (only once)
+  useEffect(() => {
+    if (documents.length > 0 && !hasAutoProcessed.current && !isProcessing) {
+      const unprocessedDocs = documents.filter(doc => !doc.content);
+      if (unprocessedDocs.length > 0) {
+        hasAutoProcessed.current = true;
+        console.log(`Auto-processing ${unprocessedDocs.length} documents...`);
+        handleProcessDocuments();
+      }
+    }
+  }, [documents, isProcessing]);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({
       behavior: "smooth",
