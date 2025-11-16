@@ -28,7 +28,7 @@ export function ChatMessage({ role, content, sources, snippets, onDocumentClick 
         
         {sources && sources.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border/50">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Sources:</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Kilder:</p>
             <div className="flex flex-wrap gap-2">
               {sources.map((source) => (
                 <Badge
