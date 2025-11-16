@@ -125,35 +125,35 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
               if (!hasDocs) return null;
 
               return (
-                <div key={category.title} className="space-y-2">
-                  <h3 className="text-sm font-semibold text-foreground px-1">{category.title}</h3>
+                <div key={category.title} className="space-y-3">
+                  <h3 className="text-sm font-bold text-foreground px-2 pt-1">{category.title}</h3>
                   
                   {category.hasSubcategories ? (
                     category.subcategories.map((sub) => {
                       if (sub.docs.length === 0) return null;
                       return (
-                        <div key={sub.name} className="space-y-1.5">
-                          <h4 className="text-xs font-medium text-muted-foreground px-1 ml-2">{sub.name}</h4>
+                        <div key={sub.name} className="space-y-2">
+                          <h4 className="text-xs font-semibold text-muted-foreground/80 px-2 ml-2 uppercase tracking-wide">{sub.name}</h4>
                           {sub.docs.map((doc) => (
                             <Card
                               key={doc.id}
-                              className="w-full max-w-full p-2.5 transition-all duration-200 hover:shadow-sm ml-4 overflow-hidden"
+                              className="w-full max-w-full p-3 transition-all duration-200 hover:shadow-md hover:border-primary/20 ml-4 overflow-hidden"
                             >
-                              <div className="flex items-start justify-between gap-2 w-full">
-                                <div className="flex items-start gap-2 flex-1 min-w-0 overflow-hidden">
+                              <div className="flex items-start justify-between gap-3 w-full">
+                                <div className="flex items-start gap-3 flex-1 min-w-0 overflow-hidden">
                                   {getFileIcon(doc.file_type)}
                                   <div className="flex-1 min-w-0 overflow-hidden">
                                     <button
                                       onClick={() => handleOpenDocument(doc.file_path)}
-                                      className="text-xs font-medium text-foreground hover:text-primary truncate block w-full text-left underline decoration-dotted underline-offset-2"
+                                      className="text-sm font-medium text-foreground hover:text-primary truncate block w-full text-left underline decoration-dotted underline-offset-2 leading-snug"
                                     >
                                       {doc.name}
                                     </button>
-                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 shrink-0">
+                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                      <Badge variant="outline" className="text-[10px] py-0.5 px-2 h-5 shrink-0 font-medium">
                                         {doc.file_type.split('/').pop()?.toUpperCase()}
                                       </Badge>
-                                      <span className="text-[10px] text-muted-foreground shrink-0">
+                                      <span className="text-xs text-muted-foreground shrink-0">
                                         {formatFileSize(doc.file_size)}
                                       </span>
                                     </div>
@@ -163,7 +163,7 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                                 <Switch
                                   checked={doc.enabled}
                                   onCheckedChange={(checked) => onToggle(doc.id, checked)}
-                                  className="scale-75 shrink-0"
+                                  className="shrink-0"
                                 />
                               </div>
                             </Card>
@@ -175,23 +175,23 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                     category.docs.map((doc) => (
                       <Card
                         key={doc.id}
-                        className="w-full max-w-full p-2.5 transition-all duration-200 hover:shadow-sm overflow-hidden"
+                        className="w-full max-w-full p-3 transition-all duration-200 hover:shadow-md hover:border-primary/20 overflow-hidden"
                       >
-                        <div className="flex items-start justify-between gap-2 w-full">
-                          <div className="flex items-start gap-2 flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-start justify-between gap-3 w-full">
+                          <div className="flex items-start gap-3 flex-1 min-w-0 overflow-hidden">
                             {getFileIcon(doc.file_type)}
                             <div className="flex-1 min-w-0 overflow-hidden">
                               <button
                                 onClick={() => handleOpenDocument(doc.file_path)}
-                                className="text-xs font-medium text-foreground hover:text-primary truncate block w-full text-left underline decoration-dotted underline-offset-2"
+                                className="text-sm font-medium text-foreground hover:text-primary truncate block w-full text-left underline decoration-dotted underline-offset-2 leading-snug"
                               >
                                 {doc.name}
                               </button>
-                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 shrink-0">
+                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                <Badge variant="outline" className="text-[10px] py-0.5 px-2 h-5 shrink-0 font-medium">
                                   {doc.file_type.split('/').pop()?.toUpperCase()}
                                 </Badge>
-                                <span className="text-[10px] text-muted-foreground shrink-0">
+                                <span className="text-xs text-muted-foreground shrink-0">
                                   {formatFileSize(doc.file_size)}
                                 </span>
                               </div>
@@ -201,7 +201,7 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                           <Switch
                             checked={doc.enabled}
                             onCheckedChange={(checked) => onToggle(doc.id, checked)}
-                            className="scale-75 shrink-0"
+                            className="shrink-0"
                           />
                         </div>
                       </Card>
