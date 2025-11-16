@@ -1,7 +1,4 @@
 project_id = "qsdhwmvkropjtozxuoqx"
 
-[functions.process-document]
-verify_jwt = false
-
 [functions.chat]
 verify_jwt = false
