@@ -257,7 +257,7 @@ const Index = () => {
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">
-                    Velkommen til Lersøgard
+                    Velkommen til Lersøgard Andels Chatbot
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     Upload dine dokumenter og stil spørgsmål. Jeg søger gennem dine aktiverede dokumenter for at give præcise svar med kilder.
