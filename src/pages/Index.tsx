@@ -132,11 +132,11 @@ const Index = () => {
           backgroundImage: `url(${backgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'blur(8px)',
-          opacity: 0.3
+          filter: 'blur(10px)',
+          opacity: 0.6
         }}
       />
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-background/90 via-background/95 to-muted/90" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-background/70 via-background/80 to-muted/70" />
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm shadow-sm relative z-20">
         <div className="container mx-auto px-6 py-4">
