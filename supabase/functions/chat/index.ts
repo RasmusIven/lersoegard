@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     if (!documents || documents.length === 0) {
       return new Response(
         JSON.stringify({
-          answer: 'No documents are currently enabled for search. Please enable at least one document.',
+          answer: 'Ingen dokumenter er i øjeblikket aktiveret til søgning. Aktiver venligst mindst ét dokument.',
           sources: [],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     if (topChunks.length === 0) {
       return new Response(
         JSON.stringify({
-          answer: 'No relevant information found in the enabled documents.',
+          answer: 'Ingen relevant information fundet i de aktiverede dokumenter.',
           sources: [],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that answers questions based on provided document excerpts. Always cite which document(s) you used to answer the question. If the documents don\'t contain relevant information, say so clearly.',
+            content: 'Du er en hjælpsom assistent, der besvarer spørgsmål baseret på uddrag fra dokumenter. Svar altid på dansk. Angiv altid, hvilke dokumenter du brugte til at besvare spørgsmålet. Hvis dokumenterne ikke indeholder relevant information, skal du sige det klart.',
           },
           {
             role: 'user',

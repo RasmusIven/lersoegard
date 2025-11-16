@@ -36,9 +36,9 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
   return (
     <div className="h-full flex flex-col">
       <div className="p-6 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground">Documents</h2>
+        <h2 className="text-lg font-semibold text-foreground">Dokumenter</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {documents.length} document{documents.length !== 1 ? 's' : ''} uploaded
+          {documents.length} dokument{documents.length !== 1 ? 'er' : ''} uploadet
         </p>
       </div>
       
@@ -47,7 +47,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
           {documents.length === 0 ? (
             <Card className="p-8 text-center border-dashed">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+              <p className="text-sm text-muted-foreground">Ingen dokumenter uploadet endnu</p>
             </Card>
           ) : (
             documents.map((doc) => (
@@ -91,7 +91,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
                     className="flex-1 text-xs"
                   >
                     <Eye className="w-3 h-3 mr-1" />
-                    View
+                    Se
                   </Button>
                   <Button
                     variant="ghost"
@@ -100,7 +100,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
                     className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs"
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
-                    Delete
+                    Slet
                   </Button>
                 </div>
               </Card>

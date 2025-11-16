@@ -33,11 +33,11 @@ export function DocumentViewer({ documentId, onClose }: DocumentViewerProps) {
         if (data.content) {
           setContent(data.content);
         } else {
-          setContent("No content available for this document. Please reprocess it.");
+          setContent("Intet indhold tilgængeligt for dette dokument. Genbehandl det venligst.");
         }
       } catch (error) {
         console.error('Error loading document:', error);
-        setContent("Error loading document content.");
+        setContent("Fejl ved indlæsning af dokumentindhold.");
       } finally {
         setLoading(false);
       }
@@ -52,7 +52,7 @@ export function DocumentViewer({ documentId, onClose }: DocumentViewerProps) {
         <div className="flex items-center gap-3">
           <FileText className="w-5 h-5 text-primary" />
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Document Viewer</h2>
+            <h2 className="text-lg font-semibold text-foreground">Dokument Fremviser</h2>
             <p className="text-sm text-muted-foreground">{documentName}</p>
           </div>
         </div>

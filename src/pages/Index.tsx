@@ -72,8 +72,8 @@ const Index = () => {
     const allowedTypes = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
     if (!allowedTypes.includes(file.type)) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload PDF, TXT, or DOCX files only.",
+        title: "Ugyldig filtype",
+        description: "Upload venligst kun PDF, TXT eller DOCX filer.",
         variant: "destructive"
       });
       return;
@@ -82,8 +82,8 @@ const Index = () => {
     // Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
       toast({
-        title: "File too large",
-        description: "Please upload files smaller than 10MB.",
+        title: "Fil for stor",
+        description: "Upload venligst filer mindre end 10MB.",
         variant: "destructive"
       });
       return;
@@ -122,15 +122,15 @@ const Index = () => {
       });
       if (response.error) throw response.error;
       toast({
-        title: "Document uploaded",
-        description: `${file.name} has been processed successfully.`
+        title: "Dokument uploadet",
+        description: `${file.name} er blevet behandlet med succes.`
       });
       fetchDocuments();
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Upload failed",
-        description: "There was an error uploading your document.",
+        title: "Upload mislykkedes",
+        description: "Der opstod en fejl ved upload af dit dokument.",
         variant: "destructive"
       });
     } finally {
@@ -167,8 +167,8 @@ const Index = () => {
     } catch (error) {
       console.error('Chat error:', error);
       toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
+        title: "Fejl",
+        description: "Kunne ikke få svar. Prøv venligst igen.",
         variant: "destructive"
       });
     } finally {
@@ -183,8 +183,8 @@ const Index = () => {
     }).eq('id', id);
     if (error) {
       toast({
-        title: "Error",
-        description: "Failed to update document.",
+        title: "Fejl",
+        description: "Kunne ikke opdatere dokument.",
         variant: "destructive"
       });
       return;
@@ -194,8 +194,8 @@ const Index = () => {
       enabled
     } : doc));
     toast({
-      title: enabled ? "Document enabled" : "Document disabled",
-      description: enabled ? "This document will be included in searches." : "This document will be excluded from searches."
+      title: enabled ? "Dokument aktiveret" : "Dokument deaktiveret",
+      description: enabled ? "Dette dokument vil blive inkluderet i søgninger." : "Dette dokument vil blive ekskluderet fra søgninger."
     });
   }
   async function handleDeleteDocument(id: string) {
@@ -210,8 +210,8 @@ const Index = () => {
     } = await supabase.from('documents').delete().eq('id', id);
     if (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete document.",
+        title: "Fejl",
+        description: "Kunne ikke slette dokument.",
         variant: "destructive"
       });
       return;
@@ -219,8 +219,8 @@ const Index = () => {
     setDocuments(prev => prev.filter(d => d.id !== id));
     if (selectedDocId === id) setSelectedDocId(null);
     toast({
-      title: "Document deleted",
-      description: "The document has been removed."
+      title: "Dokument slettet",
+      description: "Dokumentet er blevet fjernet."
     });
   }
   return <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
@@ -257,10 +257,10 @@ const Index = () => {
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">
-                    Welcome to DocuChat AI
+                    Velkommen til Lersøgard
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Upload your documents and ask questions. I'll search through your enabled documents to provide accurate answers with sources.
+                    Upload dine dokumenter og stil spørgsmål. Jeg søger gennem dine aktiverede dokumenter for at give præcise svar med kilder.
                   </p>
                 </div>
               </div> : <>
@@ -272,7 +272,7 @@ const Index = () => {
           {/* Input Area */}
           <div className="p-6 border-t border-border bg-muted/30">
             <div className="flex gap-3">
-              <Input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} placeholder="Ask a question about your documents..." disabled={isLoading} className="flex-1 bg-background border-border focus-visible:ring-primary" />
+              <Input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} placeholder="Stil et spørgsmål om dine dokumenter..." disabled={isLoading} className="flex-1 bg-background border-border focus-visible:ring-primary" />
               <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()} size="icon" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
