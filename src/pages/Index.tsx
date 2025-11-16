@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/components/ChatMessage";
 import { DocumentList } from "@/components/DocumentList";
+import backgroundImage from "@/assets/background.png";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -123,7 +124,19 @@ const Index = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
+    <div className="h-screen relative flex flex-col">
+      {/* Background Image with Blur */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'blur(8px)',
+          opacity: 0.3
+        }}
+      />
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-background/90 via-background/95 to-muted/90" />
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm shadow-sm relative z-20">
         <div className="container mx-auto px-6 py-4">
