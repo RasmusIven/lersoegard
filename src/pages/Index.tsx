@@ -149,7 +149,7 @@ const Index = () => {
                 <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Lersøgard
                 </h1>
-                <p className="text-xs text-muted-foreground">Dokument Hjælper</p>
+                <p className="text-xs text-muted-foreground">Dokumenthjælper</p>
               </div>
             </div>
 
@@ -190,7 +190,7 @@ const Index = () => {
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">
-                    Velkommen til Lersøgards dokument hjælper
+                    Velkommen til Lersøgards dokumenthjælper
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     Stil spørgsmål her, så søger chatbotten gennem foreningens dokumenter for at give svar med
