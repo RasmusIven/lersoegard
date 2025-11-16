@@ -39,26 +39,21 @@ const Index = () => {
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   useEffect(() => {
     fetchDocuments();
   }, []);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({
-      behavior: "smooth"
+      behavior: "smooth",
     });
   }, [messages]);
   async function fetchDocuments() {
-    const {
-      data,
-      error
-    } = await supabase.from('documents').select('*').order('created_at', {
-      ascending: false
+    const { data, error } = await supabase.from("documents").select("*").order("created_at", {
+      ascending: false,
     });
     if (error) {
-      console.error('Error fetching documents:', error);
+      console.error("Error fetching documents:", error);
       return;
     }
     setDocuments(data || []);
@@ -69,12 +64,17 @@ const Index = () => {
     const file = files[0];
 
     // Validate file type
-    const allowedTypes = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+    const allowedTypes = [
+      "application/pdf",
+      "text/plain",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+    ];
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Ugyldig filtype",
         description: "Upload venligst kun PDF, TXT eller DOCX filer.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -84,7 +84,7 @@ const Index = () => {
       toast({
         title: "Fil for stor",
         description: "Upload venligst filer mindre end 10MB.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -92,138 +92,140 @@ const Index = () => {
     try {
       // Upload to storage
       const filePath = `${Date.now()}-${file.name}`;
-      const {
-        error: uploadError
-      } = await supabase.storage.from('documents').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from("documents").upload(filePath, file);
       if (uploadError) throw uploadError;
 
       // Read file content
       const text = await file.text();
 
       // Create document record
-      const {
-        data: doc,
-        error: insertError
-      } = await supabase.from('documents').insert({
-        name: file.name,
-        file_path: filePath,
-        file_type: file.type,
-        file_size: file.size,
-        enabled: true
-      }).select().single();
+      const { data: doc, error: insertError } = await supabase
+        .from("documents")
+        .insert({
+          name: file.name,
+          file_path: filePath,
+          file_type: file.type,
+          file_size: file.size,
+          enabled: true,
+        })
+        .select()
+        .single();
       if (insertError) throw insertError;
 
       // Process document (extract embeddings)
-      const response = await supabase.functions.invoke('process-document', {
+      const response = await supabase.functions.invoke("process-document", {
         body: {
           documentId: doc.id,
-          content: text
-        }
+          content: text,
+        },
       });
       if (response.error) throw response.error;
       toast({
         title: "Dokument uploadet",
-        description: `${file.name} er blevet behandlet med succes.`
+        description: `${file.name} er blevet behandlet med succes.`,
       });
       fetchDocuments();
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       toast({
         title: "Upload mislykkedes",
         description: "Der opstod en fejl ved upload af dit dokument.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
   async function handleSendMessage() {
     if (!input.trim() || isLoading) return;
     const userMessage: Message = {
       role: "user",
-      content: input
+      content: input,
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('chat', {
+      const { data, error } = await supabase.functions.invoke("chat", {
         body: {
-          question: input
-        }
+          question: input,
+        },
       });
       if (error) throw error;
       const assistantMessage: Message = {
         role: "assistant",
         content: data.answer,
         sources: data.sources,
-        snippets: data.snippets
+        snippets: data.snippets,
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error("Chat error:", error);
       toast({
         title: "Fejl",
         description: "Kunne ikke få svar. Prøv venligst igen.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   }
   async function handleToggleDocument(id: string, enabled: boolean) {
-    const {
-      error
-    } = await supabase.from('documents').update({
-      enabled
-    }).eq('id', id);
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        enabled,
+      })
+      .eq("id", id);
     if (error) {
       toast({
         title: "Fejl",
         description: "Kunne ikke opdatere dokument.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    setDocuments(prev => prev.map(doc => doc.id === id ? {
-      ...doc,
-      enabled
-    } : doc));
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.id === id
+          ? {
+              ...doc,
+              enabled,
+            }
+          : doc,
+      ),
+    );
     toast({
       title: enabled ? "Dokument aktiveret" : "Dokument deaktiveret",
-      description: enabled ? "Dette dokument vil blive inkluderet i søgninger." : "Dette dokument vil blive ekskluderet fra søgninger."
+      description: enabled
+        ? "Dette dokument vil blive inkluderet i søgninger."
+        : "Dette dokument vil blive ekskluderet fra søgninger.",
     });
   }
   async function handleDeleteDocument(id: string) {
-    const doc = documents.find(d => d.id === id);
+    const doc = documents.find((d) => d.id === id);
     if (!doc) return;
-    const {
-      error: storageError
-    } = await supabase.storage.from('documents').remove([doc.file_path]);
-    if (storageError) console.error('Storage delete error:', storageError);
-    const {
-      error
-    } = await supabase.from('documents').delete().eq('id', id);
+    const { error: storageError } = await supabase.storage.from("documents").remove([doc.file_path]);
+    if (storageError) console.error("Storage delete error:", storageError);
+    const { error } = await supabase.from("documents").delete().eq("id", id);
     if (error) {
       toast({
         title: "Fejl",
         description: "Kunne ikke slette dokument.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    setDocuments(prev => prev.filter(d => d.id !== id));
+    setDocuments((prev) => prev.filter((d) => d.id !== id));
     if (selectedDocId === id) setSelectedDocId(null);
     toast({
       title: "Dokument slettet",
-      description: "Dokumentet er blevet fjernet."
+      description: "Dokumentet er blevet fjernet.",
     });
   }
-  return <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
+  return (
+    <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -231,17 +233,22 @@ const Index = () => {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
               <FileText className="w-5 h-5 text-white" />
             </div>
-          <div>
-            <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Lersøgard
-            </h1>
-            <p className="text-xs text-muted-foreground">Andels Chatbot</p>
+            <div>
+              <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Lersøgard
+              </h1>
+              <p className="text-xs text-muted-foreground">Andels Chatbot</p>
+            </div>
           </div>
-          </div>
-          
+
           <div className="flex items-center gap-3">
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".pdf,.txt,.docx,.doc" className="hidden" />
-            
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".pdf,.txt,.docx,.doc"
+              className="hidden"
+            />
           </div>
         </div>
       </header>
@@ -251,29 +258,46 @@ const Index = () => {
         {/* Left Panel - Chat */}
         <Card className="flex-1 flex flex-col shadow-lg border-border/50 min-w-0">
           <ScrollArea className="flex-1 p-6">
-            {messages.length === 0 ? <div className="h-full flex items-center justify-center text-center">
+            {messages.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-center">
                 <div className="max-w-md">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-xl font-semibold text-foreground mb-2">
-                    Velkommen til Lersøgard Andels Chatbot
-                  </h2>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Velkommen til Lersøgard Chatbot</h2>
                   <p className="text-sm text-muted-foreground">
-                    Upload dine dokumenter og stil spørgsmål. Jeg søger gennem dine aktiverede dokumenter for at give præcise svar med kilder.
+                    Upload dine dokumenter og stil spørgsmål. Jeg søger gennem dine aktiverede dokumenter for at give
+                    præcise svar med kilder.
                   </p>
                 </div>
-              </div> : <>
-                {messages.map((message, idx) => <ChatMessage key={idx} {...message} onDocumentClick={setSelectedDocId} />)}
+              </div>
+            ) : (
+              <>
+                {messages.map((message, idx) => (
+                  <ChatMessage key={idx} {...message} onDocumentClick={setSelectedDocId} />
+                ))}
                 <div ref={chatEndRef} />
-              </>}
+              </>
+            )}
           </ScrollArea>
 
           {/* Input Area */}
           <div className="p-6 border-t border-border bg-muted/30">
             <div className="flex gap-3">
-              <Input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} placeholder="Stil et spørgsmål om dine dokumenter..." disabled={isLoading} className="flex-1 bg-background border-border focus-visible:ring-primary" />
-              <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()} size="icon" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                placeholder="Stil et spørgsmål om dine dokumenter..."
+                disabled={isLoading}
+                className="flex-1 bg-background border-border focus-visible:ring-primary"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={isLoading || !input.trim()}
+                size="icon"
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+              >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </div>
@@ -282,9 +306,20 @@ const Index = () => {
 
         {/* Right Panel - Documents / Viewer */}
         <Card className="w-96 shadow-lg border-border/50 overflow-hidden">
-          {selectedDocId ? <DocumentViewer documentId={selectedDocId} onClose={() => setSelectedDocId(null)} /> : <DocumentList documents={documents} onToggle={handleToggleDocument} onDelete={handleDeleteDocument} onView={setSelectedDocId} selectedDocId={selectedDocId || undefined} />}
+          {selectedDocId ? (
+            <DocumentViewer documentId={selectedDocId} onClose={() => setSelectedDocId(null)} />
+          ) : (
+            <DocumentList
+              documents={documents}
+              onToggle={handleToggleDocument}
+              onDelete={handleDeleteDocument}
+              onView={setSelectedDocId}
+              selectedDocId={selectedDocId || undefined}
+            />
+          )}
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default Index;
