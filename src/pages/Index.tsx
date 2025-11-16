@@ -231,12 +231,12 @@ const Index = () => {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
               <FileText className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                DocuChat AI
-              </h1>
-              <p className="text-xs text-muted-foreground">Document-Aware Chatbot</p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Lersøgard
+            </h1>
+            <p className="text-xs text-muted-foreground">Andels Chatbot</p>
+          </div>
           </div>
           
           <div className="flex items-center gap-3">
