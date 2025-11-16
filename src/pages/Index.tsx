@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, FileText, Menu, X } from "lucide-react";
+import { Send, Loader2, FileText, Menu, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -27,6 +27,7 @@ interface Document {
   file_type: string;
   file_size: number;
   enabled: boolean;
+  content: string | null;
   created_at: string;
 }
 const Index = () => {
@@ -35,6 +36,7 @@ const Index = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   useEffect(() => {
@@ -123,6 +125,49 @@ const Index = () => {
     });
   }
 
+  async function handleProcessDocuments() {
+    const unprocessedDocs = documents.filter(doc => !doc.content);
+    
+    if (unprocessedDocs.length === 0) {
+      toast({
+        title: "Ingen dokumenter at behandle",
+        description: "Alle dokumenter er allerede behandlet.",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    let processedCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < unprocessedDocs.length; i++) {
+      const doc = unprocessedDocs[i];
+      
+      try {
+        const { error } = await supabase.functions.invoke('fetch-and-process-document', {
+          body: { documentId: doc.id }
+        });
+
+        if (error) throw error;
+        processedCount++;
+      } catch (error) {
+        console.error(`Failed to process ${doc.name}:`, error);
+        failedCount++;
+      }
+
+      await new Promise(res => setTimeout(res, 800));
+    }
+
+    setIsProcessing(false);
+    
+    toast({
+      title: "Behandling fuldført",
+      description: `${processedCount} dokumenter startet, ${failedCount} fejlede`,
+    });
+
+    fetchDocuments();
+  }
+
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
       {/* Header */}
@@ -141,14 +186,35 @@ const Index = () => {
               </div>
             </div>
 
-            <Button
-              onClick={() => setShowDocuments(!showDocuments)}
-              variant="outline"
-              size="icon"
-              className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-            >
-              {showDocuments ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleProcessDocuments}
+                disabled={isProcessing}
+                className="hidden md:flex border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Behandler...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Behandl dokumenter
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => setShowDocuments(!showDocuments)}
+                variant="outline"
+                size="icon"
+                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              >
+                {showDocuments ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
