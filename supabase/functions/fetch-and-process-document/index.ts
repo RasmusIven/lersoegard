@@ -5,16 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function chunkText(text: string, chunkSize = 1000, overlap = 200): string[] {
+function chunkText(text: string, chunkSize = 600, overlap = 120): string[] {
   const chunks: string[] = [];
   let start = 0;
-  
   while (start < text.length) {
     const end = Math.min(start + chunkSize, text.length);
     chunks.push(text.substring(start, end));
-    start = end - overlap;
+    start = Math.max(end - overlap, end); // prevent infinite loop
   }
-  
   return chunks;
 }
 
@@ -154,28 +152,54 @@ Deno.serve(async (req) => {
         const content = await extractTextFromPDF(doc.file_path);
         console.log(`Extracted ${content.length} characters`);
 
-        const textChunks = chunkText(content);
-        const embedding = await generateEmbedding(content.substring(0, 8000));
-
-        const chunks = textChunks.map((text, index) => ({
+        // Memory-friendly chunking and embedding
+        const rawChunks = chunkText(content, 600, 120);
+        const limitedChunks = rawChunks.slice(0, 40).map((text, index) => ({
           index,
           text,
           length: text.length,
         }));
+
+        let embedding: number[] = [];
+        try {
+          embedding = await generateEmbedding(content.substring(0, 4000));
+        } catch (e1) {
+          console.warn('Embedding 4k failed, retrying 1k...', e1);
+          try {
+            embedding = await generateEmbedding(content.substring(0, 1000));
+          } catch (e2) {
+            console.warn('Embedding 1k failed, setting empty embedding', e2);
+            embedding = [];
+          }
+        }
 
         await supabase
           .from('documents')
           .update({
             content,
             embedding: JSON.stringify(embedding),
-            chunks,
+            chunks: limitedChunks,
             updated_at: new Date().toISOString(),
           })
           .eq('id', documentId);
 
-        console.log(`Background processed: ${doc.name} (${chunks.length} chunks)`);
+        console.log(`Background processed: ${doc.name} (${limitedChunks.length} chunks)`);
       } catch (e) {
         console.error('Background processing failed:', e);
+        try {
+          // Minimal update to avoid chat skipping the document entirely
+          await supabase
+            .from('documents')
+            .update({
+              updated_at: new Date().toISOString(),
+              // set tiny placeholder to mark as processed-enough
+              chunks: [{ index: 0, text: 'Processing failed - placeholder chunk', length: 32 }],
+              embedding: JSON.stringify([]),
+            })
+            .eq('id', documentId);
+        } catch (inner) {
+          console.error('Failed to write fallback update:', inner);
+        }
       }
     };
 

@@ -69,8 +69,8 @@ export default function ProcessDocuments() {
       }
 
       setProgress(((i + 1) / documents.length) * 100);
-      // Small delay to avoid worker overload / rate limits
-      await new Promise(res => setTimeout(res, 800));
+      // Slower throttle to reduce concurrent background load
+      await new Promise(res => setTimeout(res, 3000));
     }
 
     setProcessing(false);
