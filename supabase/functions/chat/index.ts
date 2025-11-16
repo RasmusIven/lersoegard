@@ -56,132 +56,103 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${documents.length} enabled documents`);
 
-    // Create a thread for the conversation
-    console.log('Creating OpenAI thread...');
-    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
-      },
-      body: JSON.stringify({
-        messages: [{
-          role: 'user',
-          content: question,
-        }],
-      }),
-    });
+    // Search the vector store directly
+    console.log('Searching vector store...');
+    const searchResponse = await fetch(
+      `https://api.openai.com/v1/vector_stores/${vectorStoreId}/file_search`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiKey}`,
+          'Content-Type': 'application/json',
+          'OpenAI-Beta': 'assistants=v2',
+        },
+        body: JSON.stringify({
+          query: question,
+          max_num_results: 5,
+        }),
+      }
+    );
 
-    if (!threadResponse.ok) {
-      const error = await threadResponse.text();
-      console.error('Thread creation error:', error);
-      throw new Error(`Thread creation failed: ${threadResponse.status}`);
+    if (!searchResponse.ok) {
+      const error = await searchResponse.text();
+      console.error('Vector store search error:', error);
+      throw new Error(`Vector store search failed: ${searchResponse.status}`);
     }
 
-    const threadData = await threadResponse.json();
-    const threadId = threadData.id;
-    console.log(`Thread created: ${threadId}`);
+    const searchData = await searchResponse.json();
+    console.log(`Found ${searchData.results?.length || 0} relevant chunks`);
 
-    // Run the assistant with vector store
-    console.log('Running assistant with vector store...');
-    const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
+    // Build context from search results
+    let context = '';
+    const sources = new Set<string>();
+    const snippets: Array<{ source: string; text: string }> = [];
+
+    if (searchData.results && searchData.results.length > 0) {
+      for (const result of searchData.results.slice(0, 3)) {
+        const fileName = result.file?.filename || 'Unknown';
+        sources.add(fileName);
+        context += `\nFrom ${fileName}:\n${result.content || result.text || ''}\n`;
+        
+        if (snippets.length < 3) {
+          snippets.push({
+            source: fileName,
+            text: (result.content || result.text || '').substring(0, 200) + '...'
+          });
+        }
+      }
+    }
+
+    // If no results found, return early
+    if (!context) {
+      return new Response(
+        JSON.stringify({ 
+          answer: 'Jeg kunne ikke finde relevant information i dokumenterne til at besvare dit spørgsmål.',
+          sources: [],
+          snippets: []
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Use OpenAI chat completions with the context
+    console.log('Generating answer with OpenAI...');
+    const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openaiKey}`,
         'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        instructions: 'Du er en hjælpsom assistent, der besvarer spørgsmål baseret på de tilgængelige dokumenter. Citér altid, hvilke dokumenter du refererer til. Svar altid på dansk.',
-        tools: [{ type: 'file_search' }],
-        tool_resources: {
-          file_search: {
-            vector_store_ids: [vectorStoreId]
+        messages: [
+          {
+            role: 'system',
+            content: 'Du er en hjælpsom assistent, der besvarer spørgsmål baseret på de tilgængelige dokumenter. Citér altid, hvilke dokumenter du refererer til. Svar altid på dansk.'
+          },
+          {
+            role: 'user',
+            content: `Baseret på følgende information fra dokumenterne, besvar venligst spørgsmålet:\n\n${context}\n\nSpørgsmål: ${question}`
           }
-        },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 
-    if (!runResponse.ok) {
-      const error = await runResponse.text();
-      console.error('Run creation error:', error);
-      throw new Error(`Run creation failed: ${runResponse.status}`);
+    if (!chatResponse.ok) {
+      const error = await chatResponse.text();
+      console.error('Chat completion error:', error);
+      throw new Error(`Chat completion failed: ${chatResponse.status}`);
     }
 
-    const runData = await runResponse.json();
-    const runId = runData.id;
-    console.log(`Run created: ${runId}`);
-
-    // Poll for completion
-    let runStatus = runData.status;
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    while (runStatus !== 'completed' && runStatus !== 'failed' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
-        headers: {
-          'Authorization': `Bearer ${openaiKey}`,
-          'OpenAI-Beta': 'assistants=v2',
-        },
-      });
-
-      const statusData = await statusResponse.json();
-      runStatus = statusData.status;
-      console.log(`Run status: ${runStatus}`);
-      attempts++;
-    }
-
-    if (runStatus !== 'completed') {
-      throw new Error(`Run did not complete. Status: ${runStatus}`);
-    }
-
-    // Get messages
-    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      headers: {
-        'Authorization': `Bearer ${openaiKey}`,
-        'OpenAI-Beta': 'assistants=v2',
-      },
-    });
-
-    if (!messagesResponse.ok) {
-      throw new Error('Failed to retrieve messages');
-    }
-
-    const messagesData = await messagesResponse.json();
-    const assistantMessage = messagesData.data.find((msg: any) => msg.role === 'assistant');
-    
-    if (!assistantMessage) {
-      throw new Error('No assistant response found');
-    }
-
-    const answer = assistantMessage.content[0].text.value;
-    console.log('Generated answer');
-
-    // Extract citations from annotations
-    const annotations = assistantMessage.content[0].text.annotations || [];
-    const sources = [...new Set(annotations
-      .filter((a: any) => a.type === 'file_citation')
-      .map((a: any) => {
-        const doc = documents.find(d => d.name.includes(a.text));
-        return doc?.name || 'Ukendt dokument';
-      }))];
-
-    const snippets = annotations
-      .filter((a: any) => a.type === 'file_citation')
-      .slice(0, 3)
-      .map((a: any) => ({
-        source: documents.find(d => d.name.includes(a.text))?.name || 'Ukendt',
-        text: a.text.substring(0, 200) + '...'
-      }));
+    const chatData = await chatResponse.json();
+    const answer = chatData.choices[0].message.content;
 
     return new Response(
       JSON.stringify({ 
         answer,
-        sources: sources.length > 0 ? sources : documents.map(d => d.name).slice(0, 3),
+        sources: Array.from(sources),
         snippets
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
