@@ -166,7 +166,8 @@ const Index = () => {
       }
 
       setProcessingProgress(((i + 1) / unprocessedDocs.length) * 100);
-      await new Promise(res => setTimeout(res, 800));
+      // Slower throttle to reduce concurrent background load
+      await new Promise(res => setTimeout(res, 3000));
     }
 
     setIsProcessing(false);
