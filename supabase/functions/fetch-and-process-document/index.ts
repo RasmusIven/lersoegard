@@ -147,36 +147,54 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Extracting text from:', doc.name);
-    const content = await extractTextFromPDF(doc.file_path);
-    console.log(`Extracted ${content.length} characters`);
+    // Run heavy work in background to avoid WORKER_LIMIT
+    const bg = async () => {
+      try {
+        console.log('Extracting text from:', doc.name);
+        const content = await extractTextFromPDF(doc.file_path);
+        console.log(`Extracted ${content.length} characters`);
 
-    const textChunks = chunkText(content);
-    const embedding = await generateEmbedding(content.substring(0, 8000));
-    
-    const chunks = textChunks.map((text, index) => ({
-      index,
-      text,
-      length: text.length,
-    }));
+        const textChunks = chunkText(content);
+        const embedding = await generateEmbedding(content.substring(0, 8000));
 
-    await supabase
-      .from('documents')
-      .update({
-        content,
-        embedding: JSON.stringify(embedding),
-        chunks,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', documentId);
+        const chunks = textChunks.map((text, index) => ({
+          index,
+          text,
+          length: text.length,
+        }));
+
+        await supabase
+          .from('documents')
+          .update({
+            content,
+            embedding: JSON.stringify(embedding),
+            chunks,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', documentId);
+
+        console.log(`Background processed: ${doc.name} (${chunks.length} chunks)`);
+      } catch (e) {
+        console.error('Background processing failed:', e);
+      }
+    };
+
+    try {
+      // @ts-ignore - available in Supabase edge
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(bg());
+      } else {
+        bg();
+      }
+    } catch (e) {
+      console.warn('waitUntil failed, running inline:', e);
+      bg();
+    }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        documentId,
-        chunks: chunks.length,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ started: true, id: doc.id }),
+      { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
