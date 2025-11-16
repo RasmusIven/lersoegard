@@ -1,4 +1,4 @@
-import { FileText, Trash2, Eye } from "lucide-react";
+import { FileText, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -18,12 +18,11 @@ interface Document {
 interface DocumentListProps {
   documents: Document[];
   onToggle: (id: string, enabled: boolean) => void;
-  onDelete: (id: string) => void;
   onView: (id: string) => void;
   selectedDocId?: string;
 }
 
-export function DocumentList({ documents, onToggle, onDelete, onView, selectedDocId }: DocumentListProps) {
+export function DocumentList({ documents, onToggle, onView, selectedDocId }: DocumentListProps) {
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -163,16 +162,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
                                   className="flex-1 text-[10px] h-6 px-2"
                                 >
                                   <Eye className="w-3 h-3 mr-1" />
-                                  Se
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => onDelete(doc.id)}
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] h-6 px-2"
-                                >
-                                  <Trash2 className="w-3 h-3 mr-1" />
-                                  Slet
+                                  Se dokument
                                 </Button>
                               </div>
                             </Card>
@@ -221,16 +211,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
                             className="flex-1 text-[10px] h-6 px-2"
                           >
                             <Eye className="w-3 h-3 mr-1" />
-                            Se
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDelete(doc.id)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] h-6 px-2"
-                          >
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Slet
+                            Se dokument
                           </Button>
                         </div>
                       </Card>

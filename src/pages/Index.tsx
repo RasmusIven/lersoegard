@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Send, Loader2, FileText, Menu, X } from "lucide-react";
+import { Send, Loader2, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -35,10 +35,8 @@ const Index = () => {
   const [input, setInput] = useState("");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [showDocuments, setShowDocuments] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   useEffect(() => {
@@ -59,85 +57,7 @@ const Index = () => {
     }
     setDocuments(data || []);
   }
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    const file = files[0];
 
-    // Validate file type
-    const allowedTypes = [
-      "application/pdf",
-      "text/plain",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/msword",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Ugyldig filtype",
-        description: "Upload venligst kun PDF, TXT eller DOCX filer.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "Fil for stor",
-        description: "Upload venligst filer mindre end 10MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsUploading(true);
-    try {
-      // Upload to storage
-      const filePath = `${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("documents").upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      // Read file content
-      const text = await file.text();
-
-      // Create document record
-      const { data: doc, error: insertError } = await supabase
-        .from("documents")
-        .insert({
-          name: file.name,
-          file_path: filePath,
-          file_type: file.type,
-          file_size: file.size,
-          enabled: true,
-        })
-        .select()
-        .single();
-      if (insertError) throw insertError;
-
-      // Process document (extract embeddings)
-      const response = await supabase.functions.invoke("process-document", {
-        body: {
-          documentId: doc.id,
-          content: text,
-        },
-      });
-      if (response.error) throw response.error;
-      toast({
-        title: "Dokument uploadet",
-        description: `${file.name} er blevet behandlet med succes.`,
-      });
-      fetchDocuments();
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload mislykkedes",
-        description: "Der opstod en fejl ved upload af dit dokument.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
   async function handleSendMessage() {
     if (!input.trim() || isLoading) return;
     const userMessage: Message = {
@@ -243,41 +163,14 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setShowDocuments(!showDocuments)}
-                variant="outline"
-                size="icon"
-                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-              >
-                {showDocuments ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </Button>
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                variant="outline"
-                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Uploader...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Dokument
-                  </>
-                )}
-              </Button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".pdf,.txt,.docx,.doc"
-                className="hidden"
-              />
-            </div>
+            <Button
+              onClick={() => setShowDocuments(!showDocuments)}
+              variant="outline"
+              size="icon"
+              className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+            >
+              {showDocuments ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </Button>
           </div>
         </div>
       </header>
@@ -348,7 +241,6 @@ const Index = () => {
             <DocumentList
               documents={documents}
               onToggle={handleToggleDocument}
-              onDelete={handleDeleteDocument}
               onView={setSelectedDocId}
               selectedDocId={selectedDocId || undefined}
             />
