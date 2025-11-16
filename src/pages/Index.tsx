@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, FileText, Menu, X, RefreshCw, ExternalLink } from "lucide-react";
+import { Send, Loader2, FileText, Menu, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,8 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/components/ChatMessage";
 import { DocumentList } from "@/components/DocumentList";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -38,30 +36,12 @@ const Index = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showProgressDialog, setShowProgressDialog] = useState(false);
-  const [processingProgress, setProcessingProgress] = useState(0);
-  const [processedCount, setProcessedCount] = useState(0);
-  const [failedCount, setFailedCount] = useState(0);
-  const [currentDocument, setCurrentDocument] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const hasAutoProcessed = useRef(false);
   const { toast } = useToast();
   useEffect(() => {
     fetchDocuments();
   }, []);
 
-  // Auto-process unprocessed documents on load (only once)
-  useEffect(() => {
-    if (documents.length > 0 && !hasAutoProcessed.current && !isProcessing) {
-      const unprocessedDocs = documents.filter(doc => !doc.content);
-      if (unprocessedDocs.length > 0) {
-        hasAutoProcessed.current = true;
-        console.log(`Auto-processing ${unprocessedDocs.length} documents...`);
-        handleProcessDocuments();
-      }
-    }
-  }, [documents, isProcessing]);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -145,55 +125,6 @@ const Index = () => {
     });
   }
 
-  async function handleProcessDocuments() {
-    const unprocessedDocs = documents.filter(doc => !doc.content);
-    
-    if (unprocessedDocs.length === 0) {
-      toast({
-        title: "Ingen dokumenter at behandle",
-        description: "Alle dokumenter er allerede behandlet.",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    setShowProgressDialog(true);
-    setProcessingProgress(0);
-    setProcessedCount(0);
-    setFailedCount(0);
-
-    for (let i = 0; i < unprocessedDocs.length; i++) {
-      const doc = unprocessedDocs[i];
-      setCurrentDocument(doc.name);
-      
-      try {
-        const { error } = await supabase.functions.invoke('fetch-and-process-document', {
-          body: { documentId: doc.id }
-        });
-
-        if (error) throw error;
-        setProcessedCount(prev => prev + 1);
-      } catch (error) {
-        console.error(`Failed to process ${doc.name}:`, error);
-        setFailedCount(prev => prev + 1);
-      }
-
-      setProcessingProgress(((i + 1) / unprocessedDocs.length) * 100);
-      // Slower throttle to reduce concurrent background load
-      await new Promise(res => setTimeout(res, 3000));
-    }
-
-    setIsProcessing(false);
-    setCurrentDocument("");
-    
-    toast({
-      title: "Behandling fuldført",
-      description: `${processedCount} dokumenter startet, ${failedCount} fejlede`,
-    });
-
-    fetchDocuments();
-  }
-
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
       {/* Header */}
@@ -223,25 +154,6 @@ const Index = () => {
                   <ExternalLink className="mr-2 h-4 w-4" />
                   abl1926.dk
                 </a>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleProcessDocuments}
-                disabled={isProcessing}
-                className="hidden md:flex border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Behandler...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Behandl dokumenter
-                  </>
-                )}
               </Button>
               <Button
                 onClick={() => setShowDocuments(!showDocuments)}
@@ -330,32 +242,6 @@ const Index = () => {
           />
         )}
       </div>
-
-      {/* Progress Dialog */}
-      <Dialog open={showProgressDialog} onOpenChange={setShowProgressDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Behandler dokumenter</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Progress value={processingProgress} className="w-full" />
-            <div className="space-y-2 text-sm">
-              <p className="text-muted-foreground">
-                Fremskridt: {Math.round(processingProgress)}%
-              </p>
-              <p className="text-foreground">
-                <span className="text-green-600 font-medium">{processedCount}</span> startet • 
-                <span className="text-red-600 font-medium ml-1">{failedCount}</span> fejlet
-              </p>
-              {currentDocument && (
-                <p className="text-muted-foreground truncate">
-                  Behandler: <span className="font-medium">{currentDocument}</span>
-                </p>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
