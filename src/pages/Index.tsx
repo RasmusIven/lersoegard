@@ -266,8 +266,7 @@ const Index = () => {
                   </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">Velkommen til Lersøgard Chatbot</h2>
                   <p className="text-sm text-muted-foreground">
-                    Upload dine dokumenter og stil spørgsmål. Jeg søger gennem dine aktiverede dokumenter for at give
-                    præcise svar med kilder.
+                    Stil spørgsmål her, så søger gennem vores dokumenter for at give præcise svar med kildehenvisninger.
                   </p>
                 </div>
               </div>
