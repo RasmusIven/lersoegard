@@ -126,14 +126,14 @@ const Index = () => {
   return (
     <div className="h-screen relative flex flex-col">
       {/* Background Image with Blur */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(3px)',
-          opacity: 0.6
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(3px)",
+          opacity: 0.6,
         }}
       />
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-background/70 via-background/80 to-muted/70" />
@@ -189,9 +189,10 @@ const Index = () => {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-xl font-semibold text-foreground mb-2">Velkommen til Lersøgard Chatbot</h2>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Velkommen til Lersøgards Chatbot</h2>
                   <p className="text-sm text-muted-foreground">
-                    Stil spørgsmål her, så søger gennem vores dokumenter for at give præcise svar med kildehenvisninger.
+                    Stil spørgsmål her, så søger chatbotten gennem foreningens dokumenter for at give svar med
+                    kildehenvisninger.
                   </p>
                 </div>
               </div>
@@ -229,24 +230,20 @@ const Index = () => {
         </Card>
 
         {/* Right Panel - Documents */}
-        <Card 
+        <Card
           className={`
             w-[90vw] max-w-sm lg:w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out
-            ${showDocuments 
-              ? 'fixed right-0 top-[73px] bottom-0 z-[15] lg:relative lg:top-0 lg:z-0' 
-              : 'hidden lg:block'
+            ${
+              showDocuments ? "fixed right-0 top-[73px] bottom-0 z-[15] lg:relative lg:top-0 lg:z-0" : "hidden lg:block"
             }
           `}
         >
-          <DocumentList
-            documents={documents}
-            onToggle={handleToggleDocument}
-          />
+          <DocumentList documents={documents} onToggle={handleToggleDocument} />
         </Card>
 
         {/* Overlay for mobile when documents are shown */}
         {showDocuments && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-[10] lg:hidden top-[73px]"
             onClick={() => setShowDocuments(false)}
           />
