@@ -149,7 +149,7 @@ const Index = () => {
                 <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Lersøgard
                 </h1>
-                <p className="text-xs text-muted-foreground">Andels Chatbot</p>
+                <p className="text-xs text-muted-foreground">Dokument Hjælper</p>
               </div>
             </div>
 
@@ -162,7 +162,7 @@ const Index = () => {
               >
                 <a href="https://abl1926.dk" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Lersøgard Hjemmeside
+                  Lersøgard
                 </a>
               </Button>
               <Button
@@ -189,7 +189,9 @@ const Index = () => {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-xl font-semibold text-foreground mb-2">Velkommen til Lersøgards Chatbot</h2>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">
+                    Velkommen til Lersøgards dokument hjælper
+                  </h2>
                   <p className="text-sm text-muted-foreground">
                     Stil spørgsmål her, så søger chatbotten gennem foreningens dokumenter for at give svar med
                     kildehenvisninger.
