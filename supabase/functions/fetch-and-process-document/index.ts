@@ -43,29 +43,34 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 async function extractTextFromPDF(pdfUrl: string): Promise<string> {
-  console.log(`Fetching PDF from: ${pdfUrl}`);
-  
-  const response = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': 'demo',
-    },
-    body: JSON.stringify({
-      url: pdfUrl,
-      async: false
-    })
-  });
+  try {
+    console.log(`Fetching PDF from: ${pdfUrl}`);
+    const res = await fetch(pdfUrl);
+    if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.status}`);
 
-  if (!response.ok) {
-    throw new Error(`PDF.co API failed: ${response.status}`);
+    const arrayBuffer = await res.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    const pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.mjs');
+
+    const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+    const pdf = await loadingTask.promise;
+
+    console.log(`PDF loaded, pages: ${pdf.numPages}`);
+
+    let fullText = '';
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item: any) => item.str).join(' ');
+      fullText += pageText + '\n\n';
+    }
+
+    return fullText.trim();
+  } catch (e) {
+    console.error('PDF extraction failed:', e);
+    throw e instanceof Error ? e : new Error('PDF extraction failed');
   }
-
-  const result = await response.json();
-  if (result.error) throw new Error(result.message);
-
-  const textResponse = await fetch(result.url);
-  return await textResponse.text();
 }
 
 Deno.serve(async (req) => {
