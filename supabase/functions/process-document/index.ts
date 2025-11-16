@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       .from('documents')
       .update({
         content: content,
-        embedding: embedding,
+        embedding: JSON.stringify(embedding),
         chunks: chunksWithMeta,
       })
       .eq('id', documentId);
