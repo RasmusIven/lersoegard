@@ -105,10 +105,24 @@ Deno.serve(async (req) => {
     }> = [];
 
     for (const doc of documents) {
-      if (!doc.embedding || !doc.chunks) continue;
+      if (!doc.embedding || !doc.chunks) {
+        console.log(`Skipping document ${doc.name} - missing embedding or chunks`);
+        continue;
+      }
+
+      // Parse embedding if it's stored as string
+      let embedding = doc.embedding;
+      if (typeof embedding === 'string') {
+        try {
+          embedding = JSON.parse(embedding);
+        } catch (e) {
+          console.error(`Failed to parse embedding for ${doc.name}:`, e);
+          continue;
+        }
+      }
 
       // Calculate similarity with document
-      const docSimilarity = cosineSimilarity(questionEmbedding, doc.embedding);
+      const docSimilarity = cosineSimilarity(questionEmbedding, embedding);
 
       // Find relevant chunks
       const chunks = doc.chunks as Array<{ index: number; text: string; length: number }>;
