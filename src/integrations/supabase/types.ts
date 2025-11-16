@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          chunks: Json | null
+          content: string | null
+          created_at: string | null
+          embedding: string | null
+          enabled: boolean | null
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          chunks?: Json | null
+          content?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          enabled?: boolean | null
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          chunks?: Json | null
+          content?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          enabled?: boolean | null
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
