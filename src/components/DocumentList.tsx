@@ -12,6 +12,7 @@ interface Document {
   file_size: number;
   enabled: boolean;
   created_at: string;
+  category?: string;
 }
 
 interface DocumentListProps {
@@ -33,78 +34,209 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
     return <FileText className="w-5 h-5 text-primary" />;
   };
 
+  // Define categories and their structure
+  const categories = [
+    {
+      title: "A/B Lersøgaard",
+      subcategories: [
+        "Reglementer",
+        "Information",
+        "Blanketter og vejledninger",
+        "Generalforsamlinger",
+        "Årsrapporter (regnskaber)",
+        "Økonomi – Andre dokumenter",
+        "Bestyrelsesmøder"
+      ]
+    },
+    {
+      title: "Gårdlauget",
+      subcategories: [
+        "Bestyrelsesmøder – Gårdlauget",
+        "Generalforsamlinger – Gårdlauget",
+        "Regnskab – Gårdlauget"
+      ]
+    },
+    {
+      title: "Parknet",
+      subcategories: []
+    },
+    {
+      title: "Andre dokumenter",
+      subcategories: []
+    },
+    {
+      title: "Privatlivspolitik",
+      subcategories: []
+    }
+  ];
+
+  // Group documents by category
+  const groupedDocs = categories.map(cat => {
+    if (cat.subcategories.length > 0) {
+      return {
+        ...cat,
+        subcategories: cat.subcategories.map(sub => ({
+          name: sub,
+          docs: documents.filter(doc => doc.category === sub)
+        }))
+      };
+    }
+    return {
+      ...cat,
+      docs: documents.filter(doc => doc.category === cat.title)
+    };
+  });
+
   return (
     <div className="h-full flex flex-col">
-      <div className="p-6 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground">Dokumenter</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="p-4 border-b border-border">
+        <h2 className="text-base font-semibold text-foreground">Dokumenter</h2>
+        <p className="text-xs text-muted-foreground mt-1">
           {documents.length} dokument{documents.length !== 1 ? 'er' : ''} uploadet
         </p>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-3">
+      <ScrollArea className="flex-1 p-3">
+        <div className="space-y-4">
           {documents.length === 0 ? (
-            <Card className="p-8 text-center border-dashed">
-              <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Ingen dokumenter uploadet endnu</p>
+            <Card className="p-6 text-center border-dashed">
+              <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">Ingen dokumenter uploadet endnu</p>
             </Card>
           ) : (
-            documents.map((doc) => (
-              <Card
-                key={doc.id}
-                className={`p-4 transition-all duration-200 hover:shadow-md ${
-                  selectedDocId === doc.id ? 'ring-2 ring-primary bg-primary/5' : ''
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    {getFileIcon(doc.file_type)}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-foreground truncate">
-                        {doc.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {doc.file_type.split('/').pop()?.toUpperCase()}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {formatFileSize(doc.file_size)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+            groupedDocs.map((category) => {
+              const hasDocs = category.subcategories 
+                ? category.subcategories.some(sub => sub.docs.length > 0)
+                : category.docs && category.docs.length > 0;
+              
+              if (!hasDocs) return null;
+
+              return (
+                <div key={category.title} className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground px-1">{category.title}</h3>
                   
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={doc.enabled}
-                      onCheckedChange={(checked) => onToggle(doc.id, checked)}
-                    />
-                  </div>
+                  {category.subcategories ? (
+                    category.subcategories.map((sub) => {
+                      if (sub.docs.length === 0) return null;
+                      return (
+                        <div key={sub.name} className="space-y-1.5">
+                          <h4 className="text-xs font-medium text-muted-foreground px-1 ml-2">{sub.name}</h4>
+                          {sub.docs.map((doc) => (
+                            <Card
+                              key={doc.id}
+                              className={`p-2.5 transition-all duration-200 hover:shadow-sm ml-4 ${
+                                selectedDocId === doc.id ? 'ring-1 ring-primary bg-primary/5' : ''
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 flex-1 min-w-0">
+                                  {getFileIcon(doc.file_type)}
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="text-xs font-medium text-foreground truncate">
+                                      {doc.name}
+                                    </h5>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
+                                        {doc.file_type.split('/').pop()?.toUpperCase()}
+                                      </Badge>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {formatFileSize(doc.file_size)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <Switch
+                                  checked={doc.enabled}
+                                  onCheckedChange={(checked) => onToggle(doc.id, checked)}
+                                  className="scale-75"
+                                />
+                              </div>
+                              
+                              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onView(doc.id)}
+                                  className="flex-1 text-[10px] h-6 px-2"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  Se
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onDelete(doc.id)}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] h-6 px-2"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Slet
+                                </Button>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    category.docs?.map((doc) => (
+                      <Card
+                        key={doc.id}
+                        className={`p-2.5 transition-all duration-200 hover:shadow-sm ${
+                          selectedDocId === doc.id ? 'ring-1 ring-primary bg-primary/5' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            {getFileIcon(doc.file_type)}
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-xs font-medium text-foreground truncate">
+                                {doc.name}
+                              </h5>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
+                                  {doc.file_type.split('/').pop()?.toUpperCase()}
+                                </Badge>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {formatFileSize(doc.file_size)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <Switch
+                            checked={doc.enabled}
+                            onCheckedChange={(checked) => onToggle(doc.id, checked)}
+                            className="scale-75"
+                          />
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onView(doc.id)}
+                            className="flex-1 text-[10px] h-6 px-2"
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            Se
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(doc.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] h-6 px-2"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Slet
+                          </Button>
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
-                
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onView(doc.id)}
-                    className="flex-1 text-xs"
-                  >
-                    <Eye className="w-3 h-3 mr-1" />
-                    Se
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(doc.id)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs"
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    Slet
-                  </Button>
-                </div>
-              </Card>
-            ))
+              );
+            })
           )}
         </div>
       </ScrollArea>

@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       documents: {
         Row: {
+          category: string | null
           chunks: Json | null
           content: string | null
           created_at: string | null
@@ -29,6 +30,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          category?: string | null
           chunks?: Json | null
           content?: string | null
           created_at?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          category?: string | null
           chunks?: Json | null
           content?: string | null
           created_at?: string | null
