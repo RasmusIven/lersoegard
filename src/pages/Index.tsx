@@ -11,10 +11,7 @@ import { DocumentList } from "@/components/DocumentList";
 interface Message {
   role: "user" | "assistant";
   content: string;
-  sources?: Array<{
-    name: string;
-    id: string;
-  }>;
+  sources?: string[];
   snippets?: Array<{
     document: string;
     text: string;

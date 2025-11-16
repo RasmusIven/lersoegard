@@ -1,12 +1,6 @@
 import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Source {
-  name: string;
-  id: string;
-}
 
 interface Snippet {
   document: string;
@@ -16,30 +10,14 @@ interface Snippet {
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
-  sources?: Source[];
+  sources?: string[];
   snippets?: Snippet[];
 }
 
 export function ChatMessage({ role, content, sources, snippets }: ChatMessageProps) {
-  const handleSourceClick = async (sourceId: string) => {
-    const { data: doc } = await supabase
-      .from('documents')
-      .select('file_path')
-      .eq('id', sourceId)
-      .single();
-    
-    if (doc?.file_path) {
-      // Check if it's an external URL
-      if (doc.file_path.startsWith('http://') || doc.file_path.startsWith('https://')) {
-        window.open(doc.file_path, '_blank');
-      } else {
-        // Internal Supabase storage
-        const { data } = supabase.storage.from('documents').getPublicUrl(doc.file_path);
-        if (data?.publicUrl) {
-          window.open(data.publicUrl, '_blank');
-        }
-      }
-    }
+  const handleSourceClick = (sourceName: string) => {
+    // Link to the main website
+    window.open('https://abl1926.dk', '_blank');
   };
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
@@ -50,15 +28,15 @@ export function ChatMessage({ role, content, sources, snippets }: ChatMessagePro
           <div className="mt-4 pt-4 border-t border-border/50">
             <p className="text-xs font-medium text-muted-foreground mb-2">Kilder:</p>
             <div className="flex flex-wrap gap-2">
-              {sources.map((source) => (
+              {sources.map((source, idx) => (
                 <Badge
-                  key={source.id}
+                  key={idx}
                   variant="secondary"
                   className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-                  onClick={() => handleSourceClick(source.id)}
+                  onClick={() => handleSourceClick(source)}
                 >
                   <FileText className="w-3 h-3 mr-1" />
-                  {source.name}
+                  {source}
                 </Badge>
               ))}
             </div>
