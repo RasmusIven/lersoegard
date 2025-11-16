@@ -5,45 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function chunkText(text: string, chunkSize = 600, overlap = 120): string[] {
-  const chunks: string[] = [];
-  let start = 0;
-  while (start < text.length) {
-    const end = Math.min(start + chunkSize, text.length);
-    chunks.push(text.substring(start, end));
-    start = Math.max(end - overlap, end); // prevent infinite loop
-  }
-  return chunks;
-}
-
-async function generateEmbedding(text: string): Promise<number[]> {
-  const openaiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openaiKey) throw new Error('OpenAI API key not configured');
-
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'text-embedding-3-small',
-      input: text,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI embedding failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.data[0].embedding;
-}
-
 async function extractTextFromPDF(pdfUrl: string): Promise<string> {
   console.log(`Fetching PDF from: ${pdfUrl}`);
   
-  // Primary method: Try pdf.co with actual API key
   const pdfCoKey = Deno.env.get('PDFCO_API_KEY');
   if (pdfCoKey) {
     try {
@@ -78,7 +42,6 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
     }
   }
 
-  // Fallback method: Use Lovable AI for extraction
   const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!lovableApiKey) throw new Error('LOVABLE_API_KEY not configured');
 
@@ -108,6 +71,65 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
   const text = aiData.choices[0].message.content;
   console.log(`Generated ${text.length} characters via AI`);
   return text;
+}
+
+async function uploadToOpenAIVectorStore(fileName: string, content: string): Promise<string> {
+  const openaiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openaiKey) throw new Error('OPENAI_API_KEY not configured');
+
+  const vectorStoreId = 'vs_6919da5036748191afd44c286ccf61be';
+  
+  console.log(`Uploading ${fileName} to OpenAI vector store...`);
+  
+  // Create a file object
+  const blob = new Blob([content], { type: 'text/plain' });
+  const formData = new FormData();
+  formData.append('file', blob, `${fileName}.txt`);
+  formData.append('purpose', 'assistants');
+
+  // Upload file to OpenAI
+  const uploadResponse = await fetch('https://api.openai.com/v1/files', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiKey}`,
+    },
+    body: formData,
+  });
+
+  if (!uploadResponse.ok) {
+    const error = await uploadResponse.text();
+    console.error('File upload error:', error);
+    throw new Error(`File upload failed: ${uploadResponse.status}`);
+  }
+
+  const fileData = await uploadResponse.json();
+  const fileId = fileData.id;
+  console.log(`File uploaded with ID: ${fileId}`);
+
+  // Add file to vector store
+  const addToStoreResponse = await fetch(
+    `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2',
+      },
+      body: JSON.stringify({ file_id: fileId }),
+    }
+  );
+
+  if (!addToStoreResponse.ok) {
+    const error = await addToStoreResponse.text();
+    console.error('Add to vector store error:', error);
+    throw new Error(`Add to vector store failed: ${addToStoreResponse.status}`);
+  }
+
+  const storeData = await addToStoreResponse.json();
+  console.log(`File added to vector store: ${storeData.id}`);
+  
+  return fileId;
 }
 
 Deno.serve(async (req) => {
@@ -150,49 +172,30 @@ Deno.serve(async (req) => {
         const content = await extractTextFromPDF(doc.file_path);
         console.log(`Extracted ${content.length} characters`);
 
-        // Memory-friendly chunking and embedding
-        const rawChunks = chunkText(content, 600, 120);
-        const limitedChunks = rawChunks.slice(0, 40).map((text, index) => ({
-          index,
-          text,
-          length: text.length,
-        }));
+        // Upload to OpenAI vector store
+        const fileId = await uploadToOpenAIVectorStore(doc.name, content);
 
-        let embedding: number[] = [];
-        try {
-          embedding = await generateEmbedding(content.substring(0, 4000));
-        } catch (e1) {
-          console.warn('Embedding 4k failed, retrying 1k...', e1);
-          try {
-            embedding = await generateEmbedding(content.substring(0, 1000));
-          } catch (e2) {
-            console.warn('Embedding 1k failed, setting empty embedding', e2);
-            embedding = [];
-          }
-        }
-
+        // Update database with content and file ID
         await supabase
           .from('documents')
           .update({
             content,
-            embedding: JSON.stringify(embedding),
-            chunks: limitedChunks,
+            embedding: fileId, // Store OpenAI file ID instead of embedding
+            chunks: [{ index: 0, text: 'Processed in OpenAI Vector Store', length: content.length }],
             updated_at: new Date().toISOString(),
           })
           .eq('id', documentId);
 
-        console.log(`Background processed: ${doc.name} (${limitedChunks.length} chunks)`);
+        console.log(`Successfully processed: ${doc.name}`);
       } catch (e) {
         console.error('Background processing failed:', e);
         try {
-          // Minimal update to avoid chat skipping the document entirely
           await supabase
             .from('documents')
             .update({
               updated_at: new Date().toISOString(),
-              // set tiny placeholder to mark as processed-enough
-              chunks: [{ index: 0, text: 'Processing failed - placeholder chunk', length: 32 }],
-              embedding: JSON.stringify([]),
+              chunks: [{ index: 0, text: 'Processing failed', length: 0 }],
+              embedding: null,
             })
             .eq('id', documentId);
         } catch (inner) {
