@@ -162,20 +162,50 @@ Deno.serve(async (req) => {
 
     // Extract citations from annotations
     const annotations = assistantMessage.content[0].text.annotations || [];
-    const sources = [...new Set(annotations
+    
+    // Get unique file IDs from citations
+    const fileIds = [...new Set(annotations
       .filter((a: any) => a.type === 'file_citation')
-      .map((a: any) => {
-        const doc = documents.find(d => d.name.includes(a.text));
-        return doc?.name || 'Ukendt dokument';
-      }))];
+      .map((a: any) => a.file_citation?.file_id)
+      .filter(Boolean))] as string[];
+    
+    // Fetch file details from OpenAI to get actual filenames
+    const fileDetailsPromises = fileIds.map(async (fileId) => {
+      const fileResponse = await fetch(`https://api.openai.com/v1/files/${fileId}`, {
+        headers: {
+          'Authorization': `Bearer ${openaiKey}`,
+        },
+      });
+      if (fileResponse.ok) {
+        const fileData = await fileResponse.json();
+        return fileData.filename;
+      }
+      return null;
+    });
+    
+    const filenames = (await Promise.all(fileDetailsPromises)).filter(Boolean) as string[];
+    
+    // Match filenames with our document names
+    const sources = [...new Set(filenames.map((filename) => {
+      const doc = documents.find(d => 
+        filename.includes(d.name) || d.name.includes(filename.replace('.pdf', ''))
+      );
+      return doc?.name || filename;
+    }))];
 
+    // Extract text snippets from the answer where citations appear
     const snippets = annotations
       .filter((a: any) => a.type === 'file_citation')
       .slice(0, 3)
-      .map((a: any) => ({
-        source: documents.find(d => d.name.includes(a.text))?.name || 'Ukendt',
-        text: a.text.substring(0, 200) + '...'
-      }));
+      .map((a: any) => {
+        const startIndex = Math.max(0, a.start_index - 100);
+        const endIndex = Math.min(answer.length, a.end_index + 100);
+        const context = answer.substring(startIndex, endIndex).trim();
+        return {
+          document: sources[0] || 'Dokument',
+          text: context
+        };
+      });
 
     return new Response(
       JSON.stringify({ 
