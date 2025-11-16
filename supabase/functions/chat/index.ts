@@ -93,7 +93,6 @@ Deno.serve(async (req) => {
         'OpenAI-Beta': 'assistants=v2',
       },
       body: JSON.stringify({
-        assistant_id: 'asst_temp',
         model: 'gpt-4o-mini',
         instructions: 'Du er en hjælpsom assistent, der besvarer spørgsmål baseret på de tilgængelige dokumenter. Citér altid, hvilke dokumenter du refererer til. Svar altid på dansk.',
         tools: [{ type: 'file_search' }],
