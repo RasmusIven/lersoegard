@@ -1,9 +1,11 @@
-import { FileText } from "lucide-react";
+import { FileText, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 interface Document {
   id: string;
@@ -22,6 +24,8 @@ interface DocumentListProps {
 }
 
 export function DocumentList({ documents, onToggle }: DocumentListProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -81,6 +85,12 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
     }
   ];
 
+  // Filter documents based on search query
+  const filteredDocuments = documents.filter(doc => 
+    doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doc.category?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Group documents by category
   const groupedDocs = categories.map(cat => {
     if (cat.subcategories.length > 0) {
@@ -89,24 +99,36 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
         hasSubcategories: true,
         subcategories: cat.subcategories.map(sub => ({
           name: sub,
-          docs: documents.filter(doc => doc.category === sub)
+          docs: filteredDocuments.filter(doc => doc.category === sub)
         }))
       };
     }
     return {
       title: cat.title,
       hasSubcategories: false,
-      docs: documents.filter(doc => doc.category === cat.title)
+      docs: filteredDocuments.filter(doc => doc.category === cat.title)
     };
   });
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-border">
-        <h2 className="text-base font-semibold text-foreground">Dokumenter</h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          {documents.length} dokument{documents.length !== 1 ? 'er' : ''}
-        </p>
+      <div className="p-4 border-b border-border space-y-3">
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Dokumenter</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            {documents.length} dokument{documents.length !== 1 ? 'er' : ''}
+          </p>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Søg efter dokumenter..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
       </div>
       
       <ScrollArea className="flex-1 p-3">
