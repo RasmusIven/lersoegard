@@ -1,11 +1,372 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useRef, useEffect } from "react";
+import { Upload, Send, Loader2, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { ChatMessage } from "@/components/ChatMessage";
+import { DocumentList } from "@/components/DocumentList";
+import { DocumentViewer } from "@/components/DocumentViewer";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  sources?: Array<{ name: string; id: string }>;
+  snippets?: Array<{ document: string; text: string }>;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  enabled: boolean;
+  created_at: string;
+}
 
 const Index = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function fetchDocuments() {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching documents:', error);
+      return;
+    }
+
+    setDocuments(data || []);
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload PDF, TXT, or DOCX files only.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload files smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Upload to storage
+      const filePath = `${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Read file content
+      const text = await file.text();
+
+      // Create document record
+      const { data: doc, error: insertError } = await supabase
+        .from('documents')
+        .insert({
+          name: file.name,
+          file_path: filePath,
+          file_type: file.type,
+          file_size: file.size,
+          enabled: true,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Process document (extract embeddings)
+      const response = await supabase.functions.invoke('process-document', {
+        body: {
+          documentId: doc.id,
+          content: text,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      toast({
+        title: "Document uploaded",
+        description: `${file.name} has been processed successfully.`,
+      });
+
+      fetchDocuments();
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your document.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  async function handleSendMessage() {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      role: "user",
+      content: input,
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { question: input },
+      });
+
+      if (error) throw error;
+
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: data.answer,
+        sources: data.sources,
+        snippets: data.snippets,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleToggleDocument(id: string, enabled: boolean) {
+    const { error } = await supabase
+      .from('documents')
+      .update({ enabled })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update document.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDocuments(prev =>
+      prev.map(doc => (doc.id === id ? { ...doc, enabled } : doc))
+    );
+
+    toast({
+      title: enabled ? "Document enabled" : "Document disabled",
+      description: enabled
+        ? "This document will be included in searches."
+        : "This document will be excluded from searches.",
+    });
+  }
+
+  async function handleDeleteDocument(id: string) {
+    const doc = documents.find(d => d.id === id);
+    if (!doc) return;
+
+    const { error: storageError } = await supabase.storage
+      .from('documents')
+      .remove([doc.file_path]);
+
+    if (storageError) console.error('Storage delete error:', storageError);
+
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete document.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDocuments(prev => prev.filter(d => d.id !== id));
+    if (selectedDocId === id) setSelectedDocId(null);
+
+    toast({
+      title: "Document deleted",
+      description: "The document has been removed.",
+    });
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                DocuChat AI
+              </h1>
+              <p className="text-xs text-muted-foreground">Document-Aware Chatbot</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".pdf,.txt,.docx,.doc"
+              className="hidden"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Document
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 container mx-auto px-6 py-6 flex gap-6 min-h-0">
+        {/* Left Panel - Chat */}
+        <Card className="flex-1 flex flex-col shadow-lg border-border/50 min-w-0">
+          <ScrollArea className="flex-1 p-6">
+            {messages.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-center">
+                <div className="max-w-md">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">
+                    Welcome to DocuChat AI
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Upload your documents and ask questions. I'll search through your enabled documents to provide accurate answers with sources.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {messages.map((message, idx) => (
+                  <ChatMessage
+                    key={idx}
+                    {...message}
+                    onDocumentClick={setSelectedDocId}
+                  />
+                ))}
+                <div ref={chatEndRef} />
+              </>
+            )}
+          </ScrollArea>
+
+          {/* Input Area */}
+          <div className="p-6 border-t border-border bg-muted/30">
+            <div className="flex gap-3">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                placeholder="Ask a question about your documents..."
+                disabled={isLoading}
+                className="flex-1 bg-background border-border focus-visible:ring-primary"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={isLoading || !input.trim()}
+                size="icon"
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Right Panel - Documents / Viewer */}
+        <Card className="w-96 shadow-lg border-border/50 overflow-hidden">
+          {selectedDocId ? (
+            <DocumentViewer
+              documentId={selectedDocId}
+              onClose={() => setSelectedDocId(null)}
+            />
+          ) : (
+            <DocumentList
+              documents={documents}
+              onToggle={handleToggleDocument}
+              onDelete={handleDeleteDocument}
+              onView={setSelectedDocId}
+              selectedDocId={selectedDocId || undefined}
+            />
+          )}
+        </Card>
       </div>
     </div>
   );
