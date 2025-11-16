@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Send, Loader2, FileText } from "lucide-react";
+import { Upload, Send, Loader2, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -37,6 +37,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [showDocuments, setShowDocuments] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -227,36 +228,64 @@ const Index = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-              <FileText className="w-5 h-5 text-white" />
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Lersøgard
+                </h1>
+                <p className="text-xs text-muted-foreground">Andels Chatbot</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Lersøgard
-              </h1>
-              <p className="text-xs text-muted-foreground">Andels Chatbot</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".pdf,.txt,.docx,.doc"
-              className="hidden"
-            />
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setShowDocuments(!showDocuments)}
+                variant="outline"
+                size="icon"
+                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              >
+                {showDocuments ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </Button>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                variant="outline"
+                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploader...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Dokument
+                  </>
+                )}
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".pdf,.txt,.docx,.doc"
+                className="hidden"
+              />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-6 py-6 flex gap-6 min-h-0">
+      <div className="flex-1 container mx-auto px-6 py-6 flex gap-6 min-h-0 relative">
         {/* Left Panel - Chat */}
-        <Card className="flex-1 flex flex-col shadow-lg border-border/50 min-w-0">
+        <Card className="flex-1 flex flex-col shadow-lg border-border/50 min-w-0 z-0">
           <ScrollArea className="flex-1 p-6">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center text-center">
@@ -304,7 +333,16 @@ const Index = () => {
         </Card>
 
         {/* Right Panel - Documents / Viewer */}
-        <Card className="w-96 shadow-lg border-border/50 overflow-hidden">
+        <Card 
+          className={`
+            w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out z-10
+            lg:block
+            ${showDocuments 
+              ? 'fixed right-0 top-[73px] bottom-0 md:relative md:top-0' 
+              : 'hidden lg:block'
+            }
+          `}
+        >
           {selectedDocId ? (
             <DocumentViewer documentId={selectedDocId} onClose={() => setSelectedDocId(null)} />
           ) : (
@@ -317,6 +355,14 @@ const Index = () => {
             />
           )}
         </Card>
+
+        {/* Overlay for mobile when documents are shown */}
+        {showDocuments && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-[5] lg:hidden"
+            onClick={() => setShowDocuments(false)}
+          />
+        )}
       </div>
     </div>
   );
