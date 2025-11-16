@@ -33,9 +33,15 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
   };
 
   const handleOpenDocument = async (filePath: string) => {
-    const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
-    if (data?.publicUrl) {
-      window.open(data.publicUrl, '_blank');
+    // Check if it's an external URL
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      window.open(filePath, '_blank');
+    } else {
+      // Internal Supabase storage
+      const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
+      if (data?.publicUrl) {
+        window.open(data.publicUrl, '_blank');
+      }
     }
   };
 

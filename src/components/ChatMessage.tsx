@@ -29,9 +29,15 @@ export function ChatMessage({ role, content, sources, snippets }: ChatMessagePro
       .single();
     
     if (doc?.file_path) {
-      const { data } = supabase.storage.from('documents').getPublicUrl(doc.file_path);
-      if (data?.publicUrl) {
-        window.open(data.publicUrl, '_blank');
+      // Check if it's an external URL
+      if (doc.file_path.startsWith('http://') || doc.file_path.startsWith('https://')) {
+        window.open(doc.file_path, '_blank');
+      } else {
+        // Internal Supabase storage
+        const { data } = supabase.storage.from('documents').getPublicUrl(doc.file_path);
+        if (data?.publicUrl) {
+          window.open(data.publicUrl, '_blank');
+        }
       }
     }
   };
