@@ -231,7 +231,7 @@ const Index = () => {
         {/* Right Panel - Documents */}
         <Card 
           className={`
-            w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out
+            w-[90vw] max-w-sm lg:w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out
             ${showDocuments 
               ? 'fixed right-0 top-[73px] bottom-0 z-[15] lg:relative lg:top-0 lg:z-0' 
               : 'hidden lg:block'

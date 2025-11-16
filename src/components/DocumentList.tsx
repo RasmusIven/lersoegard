@@ -134,10 +134,10 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                       return (
                         <div key={sub.name} className="space-y-1.5">
                           <h4 className="text-xs font-medium text-muted-foreground px-1 ml-2">{sub.name}</h4>
-                           {sub.docs.map((doc) => (
+                          {sub.docs.map((doc) => (
                             <Card
                               key={doc.id}
-                              className="p-2.5 transition-all duration-200 hover:shadow-sm ml-4 overflow-hidden"
+                              className="w-full max-w-full p-2.5 transition-all duration-200 hover:shadow-sm ml-4 overflow-hidden"
                             >
                               <div className="flex items-start justify-between gap-2 w-full">
                                 <div className="flex items-start gap-2 flex-1 min-w-0 overflow-hidden">
@@ -175,7 +175,7 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                     category.docs.map((doc) => (
                       <Card
                         key={doc.id}
-                        className="p-2.5 transition-all duration-200 hover:shadow-sm overflow-hidden"
+                        className="w-full max-w-full p-2.5 transition-all duration-200 hover:shadow-sm overflow-hidden"
                       >
                         <div className="flex items-start justify-between gap-2 w-full">
                           <div className="flex items-start gap-2 flex-1 min-w-0 overflow-hidden">
