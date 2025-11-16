@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/components/ChatMessage";
 import { DocumentList } from "@/components/DocumentList";
-import { DocumentViewer } from "@/components/DocumentViewer";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -35,7 +34,6 @@ const Index = () => {
   const [input, setInput] = useState("");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [showDocuments, setShowDocuments] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -124,27 +122,7 @@ const Index = () => {
         : "Dette dokument vil blive ekskluderet fra søgninger.",
     });
   }
-  async function handleDeleteDocument(id: string) {
-    const doc = documents.find((d) => d.id === id);
-    if (!doc) return;
-    const { error: storageError } = await supabase.storage.from("documents").remove([doc.file_path]);
-    if (storageError) console.error("Storage delete error:", storageError);
-    const { error } = await supabase.from("documents").delete().eq("id", id);
-    if (error) {
-      toast({
-        title: "Fejl",
-        description: "Kunne ikke slette dokument.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setDocuments((prev) => prev.filter((d) => d.id !== id));
-    if (selectedDocId === id) setSelectedDocId(null);
-    toast({
-      title: "Dokument slettet",
-      description: "Dokumentet er blevet fjernet.",
-    });
-  }
+
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
       {/* Header */}
@@ -195,7 +173,7 @@ const Index = () => {
             ) : (
               <>
                 {messages.map((message, idx) => (
-                  <ChatMessage key={idx} {...message} onDocumentClick={setSelectedDocId} />
+                  <ChatMessage key={idx} {...message} />
                 ))}
                 <div ref={chatEndRef} />
               </>
@@ -225,7 +203,7 @@ const Index = () => {
           </div>
         </Card>
 
-        {/* Right Panel - Documents / Viewer */}
+        {/* Right Panel - Documents */}
         <Card 
           className={`
             w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out
@@ -235,16 +213,10 @@ const Index = () => {
             }
           `}
         >
-          {selectedDocId ? (
-            <DocumentViewer documentId={selectedDocId} onClose={() => setSelectedDocId(null)} />
-          ) : (
-            <DocumentList
-              documents={documents}
-              onToggle={handleToggleDocument}
-              onView={setSelectedDocId}
-              selectedDocId={selectedDocId || undefined}
-            />
-          )}
+          <DocumentList
+            documents={documents}
+            onToggle={handleToggleDocument}
+          />
         </Card>
 
         {/* Overlay for mobile when documents are shown */}
