@@ -74,7 +74,8 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
   const groupedDocs = categories.map(cat => {
     if (cat.subcategories.length > 0) {
       return {
-        ...cat,
+        title: cat.title,
+        hasSubcategories: true,
         subcategories: cat.subcategories.map(sub => ({
           name: sub,
           docs: documents.filter(doc => doc.category === sub)
@@ -82,7 +83,8 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
       };
     }
     return {
-      ...cat,
+      title: cat.title,
+      hasSubcategories: false,
       docs: documents.filter(doc => doc.category === cat.title)
     };
   });
@@ -105,9 +107,9 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
             </Card>
           ) : (
             groupedDocs.map((category) => {
-              const hasDocs = category.subcategories 
+              const hasDocs = category.hasSubcategories 
                 ? category.subcategories.some(sub => sub.docs.length > 0)
-                : category.docs && category.docs.length > 0;
+                : category.docs.length > 0;
               
               if (!hasDocs) return null;
 
@@ -115,7 +117,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
                 <div key={category.title} className="space-y-2">
                   <h3 className="text-sm font-semibold text-foreground px-1">{category.title}</h3>
                   
-                  {category.subcategories ? (
+                  {category.hasSubcategories ? (
                     category.subcategories.map((sub) => {
                       if (sub.docs.length === 0) return null;
                       return (
@@ -179,7 +181,7 @@ export function DocumentList({ documents, onToggle, onDelete, onView, selectedDo
                       );
                     })
                   ) : (
-                    category.docs?.map((doc) => (
+                    category.docs.map((doc) => (
                       <Card
                         key={doc.id}
                         className={`p-2.5 transition-all duration-200 hover:shadow-sm ${
