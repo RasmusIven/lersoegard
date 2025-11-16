@@ -228,7 +228,7 @@ const Index = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm shadow-sm">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm shadow-sm relative z-20">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -335,10 +335,9 @@ const Index = () => {
         {/* Right Panel - Documents / Viewer */}
         <Card 
           className={`
-            w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out z-10
-            lg:block
+            w-96 shadow-lg border-border/50 overflow-hidden transition-all duration-300 ease-in-out
             ${showDocuments 
-              ? 'fixed right-0 top-[73px] bottom-0 md:relative md:top-0' 
+              ? 'fixed right-0 top-[73px] bottom-0 z-[15] lg:relative lg:top-0 lg:z-0' 
               : 'hidden lg:block'
             }
           `}
@@ -359,7 +358,7 @@ const Index = () => {
         {/* Overlay for mobile when documents are shown */}
         {showDocuments && (
           <div 
-            className="fixed inset-0 bg-black/50 z-[5] lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[10] lg:hidden top-[73px]"
             onClick={() => setShowDocuments(false)}
           />
         )}
