@@ -162,7 +162,7 @@ const Index = () => {
               >
                 <a href="https://abl1926.dk" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  abl1926.dk
+                  Lersøgard Hjemmeside
                 </a>
               </Button>
               <Button
