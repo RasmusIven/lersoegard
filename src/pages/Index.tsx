@@ -132,7 +132,7 @@ const Index = () => {
           backgroundImage: `url(${backgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'blur(10px)',
+          filter: 'blur(3px)',
           opacity: 0.6
         }}
       />
