@@ -1,6 +1,7 @@
 import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Source {
   name: string;
@@ -17,10 +18,23 @@ interface ChatMessageProps {
   content: string;
   sources?: Source[];
   snippets?: Snippet[];
-  onDocumentClick?: (id: string) => void;
 }
 
-export function ChatMessage({ role, content, sources, snippets, onDocumentClick }: ChatMessageProps) {
+export function ChatMessage({ role, content, sources, snippets }: ChatMessageProps) {
+  const handleSourceClick = async (sourceId: string) => {
+    const { data: doc } = await supabase
+      .from('documents')
+      .select('file_path')
+      .eq('id', sourceId)
+      .single();
+    
+    if (doc?.file_path) {
+      const { data } = supabase.storage.from('documents').getPublicUrl(doc.file_path);
+      if (data?.publicUrl) {
+        window.open(data.publicUrl, '_blank');
+      }
+    }
+  };
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       <div className={`max-w-[80%] ${role === "user" ? "bg-gradient-to-r from-primary to-accent text-primary-foreground" : "bg-card border border-border"} rounded-2xl px-6 py-4 shadow-sm`}>
@@ -35,7 +49,7 @@ export function ChatMessage({ role, content, sources, snippets, onDocumentClick 
                   key={source.id}
                   variant="secondary"
                   className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-                  onClick={() => onDocumentClick?.(source.id)}
+                  onClick={() => handleSourceClick(source.id)}
                 >
                   <FileText className="w-3 h-3 mr-1" />
                   {source.name}

@@ -1,13 +1,14 @@
-import { FileText, Eye } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Document {
   id: string;
   name: string;
+  file_path: string;
   file_type: string;
   file_size: number;
   enabled: boolean;
@@ -18,11 +19,9 @@ interface Document {
 interface DocumentListProps {
   documents: Document[];
   onToggle: (id: string, enabled: boolean) => void;
-  onView: (id: string) => void;
-  selectedDocId?: string;
 }
 
-export function DocumentList({ documents, onToggle, onView, selectedDocId }: DocumentListProps) {
+export function DocumentList({ documents, onToggle }: DocumentListProps) {
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -31,6 +30,13 @@ export function DocumentList({ documents, onToggle, onView, selectedDocId }: Doc
 
   const getFileIcon = (type: string) => {
     return <FileText className="w-5 h-5 text-primary" />;
+  };
+
+  const handleOpenDocument = async (filePath: string) => {
+    const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
+    if (data?.publicUrl) {
+      window.open(data.publicUrl, '_blank');
+    }
   };
 
   // Define categories and their structure
@@ -125,17 +131,18 @@ export function DocumentList({ documents, onToggle, onView, selectedDocId }: Doc
                           {sub.docs.map((doc) => (
                             <Card
                               key={doc.id}
-                              className={`p-2.5 transition-all duration-200 hover:shadow-sm ml-4 ${
-                                selectedDocId === doc.id ? 'ring-1 ring-primary bg-primary/5' : ''
-                              }`}
+                              className="p-2.5 transition-all duration-200 hover:shadow-sm ml-4"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex items-start gap-2 flex-1 min-w-0">
                                   {getFileIcon(doc.file_type)}
                                   <div className="flex-1 min-w-0">
-                                    <h5 className="text-xs font-medium text-foreground truncate">
+                                    <button
+                                      onClick={() => handleOpenDocument(doc.file_path)}
+                                      className="text-xs font-medium text-foreground hover:text-primary truncate block w-full text-left underline decoration-dotted underline-offset-2"
+                                    >
                                       {doc.name}
-                                    </h5>
+                                    </button>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                       <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
                                         {doc.file_type.split('/').pop()?.toUpperCase()}
@@ -153,18 +160,6 @@ export function DocumentList({ documents, onToggle, onView, selectedDocId }: Doc
                                   className="scale-75"
                                 />
                               </div>
-                              
-                              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => onView(doc.id)}
-                                  className="flex-1 text-[10px] h-6 px-2"
-                                >
-                                  <Eye className="w-3 h-3 mr-1" />
-                                  Se dokument
-                                </Button>
-                              </div>
                             </Card>
                           ))}
                         </div>
@@ -174,17 +169,18 @@ export function DocumentList({ documents, onToggle, onView, selectedDocId }: Doc
                     category.docs.map((doc) => (
                       <Card
                         key={doc.id}
-                        className={`p-2.5 transition-all duration-200 hover:shadow-sm ${
-                          selectedDocId === doc.id ? 'ring-1 ring-primary bg-primary/5' : ''
-                        }`}
+                        className="p-2.5 transition-all duration-200 hover:shadow-sm"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-start gap-2 flex-1 min-w-0">
                             {getFileIcon(doc.file_type)}
                             <div className="flex-1 min-w-0">
-                              <h5 className="text-xs font-medium text-foreground truncate">
+                              <button
+                                onClick={() => handleOpenDocument(doc.file_path)}
+                                className="text-xs font-medium text-foreground hover:text-primary truncate block w-full text-left underline decoration-dotted underline-offset-2"
+                              >
                                 {doc.name}
-                              </h5>
+                              </button>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
                                   {doc.file_type.split('/').pop()?.toUpperCase()}
@@ -201,18 +197,6 @@ export function DocumentList({ documents, onToggle, onView, selectedDocId }: Doc
                             onCheckedChange={(checked) => onToggle(doc.id, checked)}
                             className="scale-75"
                           />
-                        </div>
-                        
-                        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onView(doc.id)}
-                            className="flex-1 text-[10px] h-6 px-2"
-                          >
-                            <Eye className="w-3 h-3 mr-1" />
-                            Se dokument
-                          </Button>
                         </div>
                       </Card>
                     ))
