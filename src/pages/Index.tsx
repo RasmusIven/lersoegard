@@ -169,7 +169,7 @@ const Index = () => {
                 onClick={() => setShowDocuments(!showDocuments)}
                 variant="outline"
                 size="icon"
-                className="border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+                className="lg:hidden border-primary/20 hover:border-primary/40 hover:bg-primary/5"
               >
                 {showDocuments ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </Button>
