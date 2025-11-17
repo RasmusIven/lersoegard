@@ -243,7 +243,7 @@ const Index = () => {
             ) : (
               <>
                 {messages.map((message, idx) => (
-                  <ChatMessage key={idx} {...message} />
+                  <ChatMessage key={idx} {...message} documents={documents} />
                 ))}
                 {isLoading && <LoadingMessage />}
                 <div ref={chatEndRef} />
