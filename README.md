@@ -85,7 +85,4 @@ lersoegard/
 Project Maintainer: [@RasmusIven](https://github.com/RasmusIven)
 If you have any questions or suggestions, feel free to open an issue or reach out.
 
----
 
-**Thank you for checking out Lersøgard Document Helper!**
-Feel free to modify this template as your project evolves.
