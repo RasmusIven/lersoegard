@@ -202,11 +202,11 @@ const Index = () => {
                       variant="outline"
                       className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
                       onClick={() => {
-                        setInput("Hvordan sælger jeg min andel?");
+                        setInput("Hvad blev diskuteret på sidste general forsamling?");
                         handleSendMessage();
                       }}
                     >
-                      Hvordan sælger jeg min andel?
+                      Hvad blev diskuteret på sidste general forsamling?
                     </Button>
                     <Button
                       variant="outline"
