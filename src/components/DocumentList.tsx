@@ -115,9 +115,9 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
       <div className="p-4 border-b border-border space-y-3">
         <div>
           <h2 className="text-base font-semibold text-foreground">Dokumenter</h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            {documents.length} dokument{documents.length !== 1 ? 'er' : ''}
-          </p>
+        <p className="text-[10px] text-muted-foreground mt-1">
+          {documents.length} dokument{documents.length !== 1 ? 'er' : ''} indlæst fra A/B Lersøgard
+        </p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
