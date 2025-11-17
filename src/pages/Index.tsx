@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/components/ChatMessage";
 import { DocumentList } from "@/components/DocumentList";
+import { LoadingMessage } from "@/components/LoadingMessage";
 import backgroundImage from "@/assets/background.png";
 interface Message {
   role: "user" | "assistant";
@@ -203,6 +204,7 @@ const Index = () => {
                 {messages.map((message, idx) => (
                   <ChatMessage key={idx} {...message} />
                 ))}
+                {isLoading && <LoadingMessage />}
                 <div ref={chatEndRef} />
               </>
             )}
