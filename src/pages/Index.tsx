@@ -13,7 +13,10 @@ import backgroundImage from "@/assets/background.png";
 interface Message {
   role: "user" | "assistant";
   content: string;
-  sources?: string[];
+  sources?: Array<{
+    name: string;
+    file_path: string;
+  }>;
   snippets?: Array<{
     document: string;
     text: string;
