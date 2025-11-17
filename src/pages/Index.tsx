@@ -193,18 +193,10 @@ const Index = () => {
                   <h2 className="text-xl font-semibold text-foreground mb-2">
                     Velkommen til Lersøgards dokumenthjælper
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-muted-foreground">
                     Stil spørgsmål her, så søger chatbotten gennem foreningens dokumenter for at give svar med
                     kildehenvisninger.
                   </p>
-                  <div className="text-left text-sm text-muted-foreground space-y-2 mt-4">
-                    <p className="font-medium">Forslag til spørgsmål:</p>
-                    <ul className="space-y-1 list-disc list-inside">
-                      <li>Vedtægter og husorden i Andelsboligforeningen Lersøgard</li>
-                      <li>Praktiske spørgsmål om drift, økonomi eller beboerforhold</li>
-                      <li>Beskrivelse af boligtyper og faciliteter i foreningen</li>
-                    </ul>
-                  </div>
                 </div>
               </div>
             ) : (
