@@ -1,10 +1,21 @@
 import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Snippet {
   document: string;
   text: string;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  enabled: boolean;
+  created_at: string;
 }
 
 interface ChatMessageProps {
@@ -12,12 +23,30 @@ interface ChatMessageProps {
   content: string;
   sources?: string[];
   snippets?: Snippet[];
+  documents?: Document[];
 }
 
-export function ChatMessage({ role, content, sources, snippets }: ChatMessageProps) {
+export function ChatMessage({ role, content, sources, snippets, documents = [] }: ChatMessageProps) {
   const handleSourceClick = (sourceName: string) => {
-    // Link to the main website
-    window.open('https://abl1926.dk', '_blank');
+    // Find the matching document
+    const document = documents.find(doc => doc.name === sourceName);
+    
+    if (document) {
+      // Open the actual document
+      const filePath = document.file_path;
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        window.open(filePath, '_blank');
+      } else {
+        // Internal Supabase storage
+        const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
+        if (data?.publicUrl) {
+          window.open(data.publicUrl, '_blank');
+        }
+      }
+    } else {
+      // Fallback to main website if document not found
+      window.open('https://abl1926.dk', '_blank');
+    }
   };
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
