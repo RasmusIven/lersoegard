@@ -215,7 +215,7 @@ const Index = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                placeholder="Stil et spørgsmål om dine dokumenter..."
+                placeholder="Stil et spørgsmål..."
                 disabled={isLoading}
                 className="flex-1 bg-background border-border focus-visible:ring-primary"
               />
