@@ -54,6 +54,7 @@ cd lersoegard
 
 ## Directory Structure
 
+```
 lersoegard/
 ├── public/                  # Static assets + documents
 │   └── documents/           # Stored PDF/files
@@ -80,6 +81,7 @@ lersoegard/
 ├── tailwind.config.ts       # Tailwind config
 ├── tsconfig.json            # TypeScript config
 └── vite.config.ts           # Vite config
+```
 
 ## Contributing
 
