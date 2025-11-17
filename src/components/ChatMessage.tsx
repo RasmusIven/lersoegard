@@ -42,17 +42,6 @@ export function ChatMessage({ role, content, sources, snippets }: ChatMessagePro
             </div>
           </div>
         )}
-        
-        {snippets && snippets.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {snippets.map((snippet, idx) => (
-              <Card key={idx} className="p-3 bg-muted/30 border-none">
-                <p className="text-xs font-medium text-primary mb-1">{snippet.document}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{snippet.text}</p>
-              </Card>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
