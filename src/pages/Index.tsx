@@ -222,11 +222,11 @@ const Index = () => {
                       variant="outline"
                       className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
                       onClick={() => {
-                        setInput("Hvordan kontakter jeg bestyrelsen?");
+                        setInput("Hvilken håndværker skal jeg bruge?");
                         handleSendMessage();
                       }}
                     >
-                      Hvordan kontakter jeg bestyrelsen?
+                      Hvilken håndværker skal jeg bruge?
                     </Button>
                   </div>
                 </div>
