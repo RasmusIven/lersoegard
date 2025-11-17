@@ -16,8 +16,9 @@ interface ChatMessageProps {
 
 export function ChatMessage({ role, content, sources, snippets }: ChatMessageProps) {
   const handleSourceClick = (sourceName: string) => {
-    // Link to the main website
-    window.open('https://abl1926.dk', '_blank');
+    // Link to the actual document
+    const documentPath = `/documents/${sourceName}`;
+    window.open(documentPath, '_blank');
   };
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
