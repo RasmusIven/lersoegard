@@ -181,7 +181,7 @@ const Index = () => {
       {/* Main Content */}
       <div className="flex-1 container mx-auto px-6 py-6 flex gap-6 min-h-0 relative">
         {/* Left Panel - Chat */}
-        <Card className="flex-1 flex flex-col shadow-lg border-border/50 min-w-0 z-0 bg-card/90">
+        <Card className="flex-1 flex flex-col shadow-lg border-border/50 min-w-0 z-0 bg-card/80">
           <ScrollArea className="flex-1 p-6">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center text-center">
