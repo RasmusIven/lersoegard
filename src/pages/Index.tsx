@@ -237,7 +237,7 @@ const Index = () => {
                 </a>
               </Button>
               
-              {user ? (
+              {user && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -246,16 +246,6 @@ const Index = () => {
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log ud
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/auth")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Log ind
                 </Button>
               )}
 
