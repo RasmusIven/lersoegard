@@ -206,7 +206,6 @@ const Index = () => {
                       className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
                       onClick={() => {
                         setInput("Hvad blev diskuteret på sidste general forsamling?");
-                        handleSendMessage();
                       }}
                     >
                       Hvad blev diskuteret på sidste general forsamling?
@@ -216,7 +215,6 @@ const Index = () => {
                       className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
                       onClick={() => {
                         setInput("Hvad er reglerne for udlejning?");
-                        handleSendMessage();
                       }}
                     >
                       Hvad er reglerne for udlejning?
@@ -226,7 +224,6 @@ const Index = () => {
                       className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
                       onClick={() => {
                         setInput("Hvilken håndværker skal jeg bruge?");
-                        handleSendMessage();
                       }}
                     >
                       Hvilken håndværker skal jeg bruge?
@@ -236,7 +233,6 @@ const Index = () => {
                       className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
                       onClick={() => {
                         setInput("Gælder gulvafslibning som forbedring?");
-                        handleSendMessage();
                       }}
                     >
                       Gælder gulvafslibning som forbedring?
