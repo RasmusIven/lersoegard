@@ -193,10 +193,42 @@ const Index = () => {
                   <h2 className="text-xl font-semibold text-foreground mb-2">
                     Velkommen til Lersøgards dokumenthjælper
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-6">
                     Stil spørgsmål her, så søger chatbotten gennem foreningens dokumenter for at give svar med
                     kildehenvisninger.
                   </p>
+                  <div className="flex flex-col gap-2 mt-6">
+                    <Button
+                      variant="outline"
+                      className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
+                      onClick={() => {
+                        setInput("Hvordan sælger jeg min andel?");
+                        handleSendMessage();
+                      }}
+                    >
+                      Hvordan sælger jeg min andel?
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
+                      onClick={() => {
+                        setInput("Hvad er reglerne for udlejning?");
+                        handleSendMessage();
+                      }}
+                    >
+                      Hvad er reglerne for udlejning?
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
+                      onClick={() => {
+                        setInput("Hvordan kontakter jeg bestyrelsen?");
+                        handleSendMessage();
+                      }}
+                    >
+                      Hvordan kontakter jeg bestyrelsen?
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
