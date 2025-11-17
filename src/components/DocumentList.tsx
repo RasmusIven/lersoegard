@@ -21,9 +21,10 @@ interface Document {
 interface DocumentListProps {
   documents: Document[];
   onToggle: (id: string, enabled: boolean) => void;
+  isAdmin?: boolean;
 }
 
-export function DocumentList({ documents, onToggle }: DocumentListProps) {
+export function DocumentList({ documents, onToggle, isAdmin = false }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const formatFileSize = (bytes: number) => {
@@ -200,6 +201,7 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                                   checked={doc.enabled}
                                   onCheckedChange={(checked) => onToggle(doc.id, checked)}
                                   className="shrink-0"
+                                  disabled={!isAdmin}
                                 />
                               </div>
                             </Card>
@@ -238,6 +240,7 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                             checked={doc.enabled}
                             onCheckedChange={(checked) => onToggle(doc.id, checked)}
                             className="shrink-0"
+                            disabled={!isAdmin}
                           />
                         </div>
                       </Card>

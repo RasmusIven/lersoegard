@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, FileText, Menu, X, ExternalLink } from "lucide-react";
+import { Send, Loader2, FileText, Menu, X, ExternalLink, LogOut, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { DocumentList } from "@/components/DocumentList";
 import { LoadingMessage } from "@/components/LoadingMessage";
 import backgroundImage from "@/assets/background.png";
+import type { User, Session } from "@supabase/supabase-js";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -35,10 +37,42 @@ const Index = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
   useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Check admin role when session changes
+        if (session?.user) {
+          setTimeout(() => {
+            checkAdminRole(session.user.id);
+          }, 0);
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminRole(session.user.id);
+      }
+    });
+
     fetchDocuments();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -46,6 +80,21 @@ const Index = () => {
       behavior: "smooth",
     });
   }, [messages]);
+
+  async function checkAdminRole(userId: string) {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    
+    if (!error && data) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }
   async function fetchDocuments() {
     const { data, error } = await supabase.from("documents").select("*").order("created_at", {
       ascending: false,
@@ -92,6 +141,16 @@ const Index = () => {
     }
   }
   async function handleToggleDocument(id: string, enabled: boolean) {
+    // Check if user is admin
+    if (!isAdmin) {
+      toast({
+        title: "Adgang nægtet",
+        description: "Kun administratorer kan ændre dokumenter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from("documents")
       .update({
@@ -121,6 +180,14 @@ const Index = () => {
       description: enabled
         ? "Dette dokument vil blive inkluderet i søgninger."
         : "Dette dokument vil blive ekskluderet fra søgninger.",
+    });
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    toast({
+      title: "Logget ud",
+      description: "Du er nu logget ud.",
     });
   }
 
@@ -169,6 +236,29 @@ const Index = () => {
                   Lersøgard
                 </a>
               </Button>
+              
+              {user ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log ud
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/auth")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Log ind
+                </Button>
+              )}
+
               <Button
                 onClick={() => setShowDocuments(!showDocuments)}
                 variant="outline"
@@ -283,7 +373,7 @@ const Index = () => {
             }
           `}
         >
-          <DocumentList documents={documents} onToggle={handleToggleDocument} />
+          <DocumentList documents={documents} onToggle={handleToggleDocument} isAdmin={isAdmin} />
         </Card>
 
         {/* Overlay for mobile when documents are shown */}
