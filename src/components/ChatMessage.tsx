@@ -2,6 +2,7 @@ import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import ReactMarkdown from "react-markdown";
 
 interface Snippet {
   document: string;
@@ -51,7 +52,9 @@ export function ChatMessage({ role, content, sources, snippets, documents = [] }
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       <div className={`max-w-[80%] ${role === "user" ? "bg-gradient-to-r from-primary to-accent text-primary-foreground" : "bg-card border border-border"} rounded-2xl px-6 py-4 shadow-sm`}>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+        <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-a:text-primary prose-strong:font-semibold prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-muted prose-pre:border prose-pre:border-border">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
         
         {sources && sources.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border/50">
