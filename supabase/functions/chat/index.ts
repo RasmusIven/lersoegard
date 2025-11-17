@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     console.log('Fetching enabled documents...');
     const { data: documents, error: dbError } = await supabase
       .from('documents')
-      .select('name, file_path')
+      .select('name')
       .eq('enabled', true)
       .not('content', 'is', null);
 
@@ -194,12 +194,12 @@ Deno.serve(async (req) => {
     
     const filenames = (await Promise.all(fileDetailsPromises)).filter(Boolean) as string[];
     
-    // Match filenames with our document names and get their paths
-    const sourceDocuments = [...new Set(filenames.map((filename) => {
+    // Match filenames with our document names
+    const sources = [...new Set(filenames.map((filename) => {
       const doc = documents.find(d => 
         filename.includes(d.name) || d.name.includes(filename.replace('.pdf', ''))
       );
-      return doc ? { name: doc.name, file_path: doc.file_path } : { name: filename, file_path: '' };
+      return doc?.name || filename;
     }))];
 
     // Extract text snippets from the answer where citations appear
@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
         const endIndex = Math.min(answer.length, a.end_index + 100);
         const context = answer.substring(startIndex, endIndex).trim();
         return {
-          document: sourceDocuments[0]?.name || 'Dokument',
+          document: sources[0] || 'Dokument',
           text: context
         };
       });
@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         answer,
-        sources: sourceDocuments,
+        sources,
         snippets
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
