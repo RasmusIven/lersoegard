@@ -1,26 +1,4 @@
-# Welcome to Lersøgard Document Helper
-
-## Project info
-
-**URL**: https://lovable.dev/projects/4e2707cd-57a1-4105-9d06-309657f630d2
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-Here’s a suggested **README.md** template for the repository **Lersøgard Document Helper** (GitHub: [RasmusIven/lersoegard](https://github.com/RasmusIven/lersoegard)). Feel free to adjust wording, sections or formatting to suit your project’s style and audience.
-
----
-
 # Lersøgard Document Helper
-
-A web-app built with modern frontend tools to help manage/document whatever “Lersøgard” refers to (adjust description as needed).
 
 ## Table of Contents
 
@@ -30,9 +8,6 @@ A web-app built with modern frontend tools to help manage/document whatever “L
 * [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
-  * [Running in Development](#running-in-development)
-  * [Building for Production](#building-for-production)
-* [Configuration](#configuration)
 * [Directory Structure](#directory-structure)
 * [Contributing](#contributing)
 * [Contact](#contact)
@@ -76,32 +51,6 @@ Clone the repository:
 git clone https://github.com/RasmusIven/lersoegard.git  
 cd lersoegard  
 ```
-
-Install dependencies:
-
-```bash
-npm install  
-# or  
-yarn install  
-```
-
-### Running in Development
-
-Start the development server:
-
-```bash
-npm run dev  
-# or  
-yarn dev  
-```
-
-Open [http://localhost:3000](http://localhost:3000) (or whichever port) in your browser to view the app.
-
-## Configuration
-
-* Copy `.env.example` (if provided) to `.env` and fill in the environment variables (e.g., API keys, database URL, auth secrets)
-* Tailwind config is in `tailwind.config.ts`, Vite config in `vite.config.ts`
-* If using a backend like Supabase, configure the project accordingly under `supabase/` folder
 
 ## Directory Structure
 
