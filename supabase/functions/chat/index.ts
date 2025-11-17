@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         answer,
-        sources: sources.length > 0 ? sources : documents.map(d => d.name).slice(0, 3),
+        sources,
         snippets
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
