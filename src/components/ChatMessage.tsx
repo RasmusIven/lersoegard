@@ -10,15 +10,21 @@ interface Snippet {
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
-  sources?: string[];
+  sources?: Array<{
+    name: string;
+    file_path: string;
+  }>;
   snippets?: Snippet[];
 }
 
 export function ChatMessage({ role, content, sources, snippets }: ChatMessageProps) {
-  const handleSourceClick = (sourceName: string) => {
-    // Link to the actual document
-    const documentPath = `/documents/${sourceName}`;
-    window.open(documentPath, '_blank');
+  const handleSourceClick = (filePath: string) => {
+    // Open the document using its file path
+    if (filePath.startsWith('http')) {
+      window.open(filePath, '_blank');
+    } else {
+      window.open(filePath, '_blank');
+    }
   };
   return (
     <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
@@ -34,10 +40,10 @@ export function ChatMessage({ role, content, sources, snippets }: ChatMessagePro
                   key={idx}
                   variant="secondary"
                   className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-                  onClick={() => handleSourceClick(source)}
+                  onClick={() => handleSourceClick(source.file_path)}
                 >
                   <FileText className="w-3 h-3 mr-1" />
-                  {source}
+                  {source.name}
                 </Badge>
               ))}
             </div>
