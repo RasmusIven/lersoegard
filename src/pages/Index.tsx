@@ -228,6 +228,16 @@ const Index = () => {
                     >
                       Hvilken håndværker skal jeg bruge?
                     </Button>
+                    <Button
+                      variant="outline"
+                      className="text-left justify-start h-auto py-3 px-4 hover:bg-primary/5 hover:border-primary/40 transition-colors"
+                      onClick={() => {
+                        setInput("Gælder gulvafslibning som forbedring?");
+                        handleSendMessage();
+                      }}
+                    >
+                      Gælder gulvafslibning som forbedring?
+                    </Button>
                   </div>
                 </div>
               </div>
