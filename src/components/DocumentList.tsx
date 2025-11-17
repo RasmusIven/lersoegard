@@ -32,6 +32,20 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const getFileLabel = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('pdf')) return 'PDF';
+    if (t.includes('wordprocessingml')) return 'DOCX';
+    if (t.includes('msword')) return 'DOC';
+    if (t.includes('spreadsheetml')) return 'XLSX';
+    if (t.includes('ms-excel')) return 'XLS';
+    if (t.includes('presentationml')) return 'PPTX';
+    if (t.startsWith('image/')) return 'IMG';
+    if (t.startsWith('text/')) return 'TXT';
+    const fallback = t.split('/').pop() || t;
+    return fallback.slice(0, 8).toUpperCase();
+  };
+
   const getFileIcon = (type: string) => {
     return <FileText className="w-5 h-5 text-primary" />;
   };
@@ -154,12 +168,12 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                     category.subcategories.map((sub) => {
                       if (sub.docs.length === 0) return null;
                       return (
-                        <div key={sub.name} className="space-y-2">
+                        <div key={sub.name} className="space-y-2 px-2">
                           <h4 className="text-xs font-semibold text-muted-foreground/80 px-2 ml-2 uppercase tracking-wide">{sub.name}</h4>
                           {sub.docs.map((doc) => (
                             <Card
                               key={doc.id}
-                              className="w-full max-w-full p-3 transition-all duration-200 hover:shadow-md hover:border-primary/20 ml-4 overflow-hidden"
+                              className="w-full max-w-full p-3 transition-all duration-200 hover:shadow-md hover:border-primary/20 overflow-hidden"
                             >
                               <div className="flex items-start justify-between gap-3 w-full">
                                 <div className="flex items-start gap-3 flex-1 min-w-0 overflow-hidden">
@@ -171,14 +185,14 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                                     >
                                       {doc.name}
                                     </button>
-                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                      <Badge variant="outline" className="text-[10px] py-0.5 px-2 h-5 shrink-0 font-medium">
-                                        {doc.file_type.split('/').pop()?.toUpperCase()}
-                                      </Badge>
-                                      <span className="text-xs text-muted-foreground shrink-0">
-                                        {formatFileSize(doc.file_size)}
-                                      </span>
-                                    </div>
+                                      <div className="flex items-center gap-2 mt-1.5 flex-wrap min-w-0">
+                                        <Badge variant="outline" className="text-[10px] py-0.5 px-2 h-5 font-medium max-w-[50%] truncate">
+                                          {getFileLabel(doc.file_type)}
+                                        </Badge>
+                                        <span className="text-xs text-muted-foreground">
+                                          {formatFileSize(doc.file_size)}
+                                        </span>
+                                      </div>
                                   </div>
                                 </div>
                                 
@@ -209,14 +223,14 @@ export function DocumentList({ documents, onToggle }: DocumentListProps) {
                               >
                                 {doc.name}
                               </button>
-                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                <Badge variant="outline" className="text-[10px] py-0.5 px-2 h-5 shrink-0 font-medium">
-                                  {doc.file_type.split('/').pop()?.toUpperCase()}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground shrink-0">
-                                  {formatFileSize(doc.file_size)}
-                                </span>
-                              </div>
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap min-w-0">
+                                  <Badge variant="outline" className="text-[10px] py-0.5 px-2 h-5 font-medium max-w-[50%] truncate">
+                                    {getFileLabel(doc.file_type)}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatFileSize(doc.file_size)}
+                                  </span>
+                                </div>
                             </div>
                           </div>
                           
