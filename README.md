@@ -1,4 +1,4 @@
-# Lersøgard Document Helper
+# Lersøgaard Document Helper
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@
 
 ## About the Project
 
-Lersøgard Document Helper is designed to help the community of Lersøgard with gathering information from documents on their website.
+Lersøgaard Document Helper is designed to help the community of Lersøgaard with gathering information from documents on their website.
 It provides a clean, responsive UI, built with React and Tailwind CSS, to ensure efficient usage and maintainable code.
 
 ## Technologies Used
