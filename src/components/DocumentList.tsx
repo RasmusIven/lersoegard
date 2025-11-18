@@ -131,7 +131,7 @@ export function DocumentList({ documents, onToggle, isAdmin = false }: DocumentL
         <div>
           <h2 className="text-base font-semibold text-foreground">Dokumenter</h2>
         <p className="text-[10px] text-muted-foreground mt-1">
-          {documents.length} dokument{documents.length !== 1 ? 'er' : ''} indlæst fra A/B Lersøgard
+          {documents.length} dokument{documents.length !== 1 ? 'er' : ''} indlæst fra A/B Lersøgaard
         </p>
         </div>
         <div className="relative">

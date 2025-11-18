@@ -218,7 +218,7 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold font-poppins bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Lersøgard
+                  Lersøgaard
                 </h1>
                 <p className="text-xs text-muted-foreground">Dokumenthjælper</p>
               </div>
@@ -233,7 +233,7 @@ const Index = () => {
               >
                 <a href="https://abl1926.dk" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Lersøgard
+                  Lersøgaard
                 </a>
               </Button>
               
@@ -274,7 +274,7 @@ const Index = () => {
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">
-                    Velkommen til Lersøgards dokumenthjælper
+                    Velkommen til Lersøgaards dokumenthjælper
                   </h2>
                   <p className="text-sm text-muted-foreground mb-6">
                     Stil spørgsmål her, så søger chatbotten gennem foreningens dokumenter for at give svar med
